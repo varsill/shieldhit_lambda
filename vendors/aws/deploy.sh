@@ -1,0 +1,1 @@
+zip shieldhit_deploy.zip ..\..\converters.py .\lambda_function.py .\shieldhit_executor.py ..\..\binaries\shieldhit

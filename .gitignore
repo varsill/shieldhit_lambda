@@ -1,0 +1,6 @@
+shieldhit
+results/
+deploy/
+convertmc*
+*.zip
+__pycache__/
