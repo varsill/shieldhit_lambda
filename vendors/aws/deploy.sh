@@ -1,1 +1,2 @@
-zip shieldhit_deploy.zip ..\..\converters.py .\lambda_function.py .\shieldhit_executor.py ..\..\binaries\shieldhit
+zip -j shieldhit_deploy.zip converters.py vendors/aws/lambda_function.py vendors/aws/shieldhit_executor.py binaries/shieldhit
+aws lambda update-function-code --function-name shieldhit_test_python_3_8 --zip-file fileb://shieldhit_deploy.zip

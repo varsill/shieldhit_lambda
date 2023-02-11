@@ -8,7 +8,7 @@ def simulation(event):
     N = event.get("N", 0)
     
     try:
-        subprocess.check_output(['cp', '-rf', './binaries/shieldhit', '/tmp'])
+        subprocess.check_output(['cp', '-rf', 'shieldhit', '/tmp'])
         subprocess.check_output(['chmod', 'a+x', '/tmp/shieldhit'])
     except Exception:
         pass
@@ -20,6 +20,7 @@ def simulation(event):
     all_result_files = glob.glob("./*.bdo")
   
     result_map = files_to_map(all_result_files)
+    subprocess.check_output(['rm', '-rf', './*.bdo'])
     return result_map
     
 
