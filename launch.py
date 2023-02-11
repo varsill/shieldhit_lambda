@@ -6,11 +6,8 @@ from converters import *
 import glob
 from multiprocessing import Pool
 import time
+import functools
 
-HOW_MANY_WORKERS = 50
-
-HOW_MANY_SAMPLES = 100000
-SAMPLES_PER_WORKER = int(HOW_MANY_SAMPLES/HOW_MANY_WORKERS)
 LAMBDA_URL = os.getenv("LAMBDA_URL")
 DAT_FILES = files_to_map(glob.glob("input/*.dat"))
 TEMPORARY_RESULTS = "results/temporary"
@@ -19,15 +16,15 @@ FINAL_RESULTS = "results/final"
 def _cmd(command: str):
   return subprocess.check_output(command.split())
 
-def _meassure_time(f):
+def meassure_time(f):
   start_time = time.time()
   result = f()
   end_time = time.time()
   return result, end_time-start_time
 
-def _launch_worker(worker_id):
-  json_input = {"n": SAMPLES_PER_WORKER, "N": worker_id, "files": DAT_FILES}
-  result, request_time = _meassure_time(lambda: requests.post(LAMBDA_URL, json=json_input))
+def _launch_worker(worker_id, how_many_samples):
+  json_input = {"n": how_many_samples, "N": worker_id, "files": DAT_FILES}
+  result, request_time = meassure_time(lambda: requests.post(LAMBDA_URL, json=json_input))
   os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
   map_to_files(result.json()["files"],TEMPORARY_RESULTS)
   metrics = {"simulation_time": result.json()["time"], "request_time": request_time}
@@ -41,30 +38,35 @@ def _separate_results(input_dir, output_dir):
     os.makedirs(result_subdir, exist_ok=True)
     shutil.move(filename, result_subdir)
 
-def execute_map():
-  with Pool(HOW_MANY_WORKERS) as process:
-    result = process.map_async(_launch_worker, range(HOW_MANY_WORKERS))
+def execute_map(how_many_samples, how_many_workers):
+  samples_per_worker = int(how_many_samples/how_many_workers)
+  worker = functools.partial(_launch_worker, how_many_samples=samples_per_worker)
+  with Pool(how_many_workers) as process:
+    result = process.map_async(
+      worker, 
+      range(how_many_workers)
+    )
     result.wait()
   return {"mappers_time": result.get()}
 
 def execute_reduce(output_dir):
   _separate_results(TEMPORARY_RESULTS, TEMPORARY_RESULTS)
   for subdir in glob.glob(f"{TEMPORARY_RESULTS}/*"):
-    _cmd(f"binaries/convertmc.exe image --many {subdir}/* {output_dir}")
+    _cmd(f"binaries/convertmc.exe txt --many {subdir}/* {output_dir}")
   shutil.rmtree(TEMPORARY_RESULTS)
 
-def run():
-  metrics, map_time = _meassure_time(execute_map)
+def run(how_many_samples, how_many_workers):
+  metrics, map_time = meassure_time(
+    lambda: execute_map(how_many_samples, how_many_workers)
+  )
+
   os.makedirs(FINAL_RESULTS, exist_ok=True)
-  _, reduce_time = _meassure_time(lambda: execute_reduce(FINAL_RESULTS))
+  _, reduce_time = meassure_time(lambda: execute_reduce(FINAL_RESULTS))
   metrics["full_map_time"] = map_time
   metrics["reduce_time"] = reduce_time
   return metrics
 
-if __name__ == '__main__':
-  metrics, duration = _meassure_time(run)
-  metrics["total_duration"] = duration
-  print(f"Metrics: {metrics}")
+
     
   
     
