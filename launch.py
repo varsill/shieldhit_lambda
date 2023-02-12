@@ -7,9 +7,10 @@ import glob
 from multiprocessing import Pool
 import time
 import functools
+import lzma
 
 LAMBDA_URL = os.getenv("LAMBDA_URL")
-DAT_FILES = files_to_map(glob.glob("input/*.dat"))
+DAT_FILES = files_to_map(glob.glob("input/*.dat"), lzma.compress)
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 
@@ -23,12 +24,17 @@ def meassure_time(f):
   return result, end_time-start_time
 
 def _launch_worker(worker_id, how_many_samples):
-  json_input = {"n": how_many_samples, "N": worker_id, "files": DAT_FILES}
-  result, request_time = meassure_time(lambda: requests.post(LAMBDA_URL, json=json_input))
-  os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
-  map_to_files(result.json()["files"],TEMPORARY_RESULTS)
-  metrics = {"simulation_time": result.json()["time"], "request_time": request_time}
-  return metrics
+  try:
+    json_input = {"n": how_many_samples, "N": worker_id, "files": DAT_FILES}
+    response, request_time = meassure_time(lambda: requests.post(LAMBDA_URL, json=json_input))
+    os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
+    if response.status_code != 200:
+      raise Exception(f"Worker {worker_id}: reponse unsuccessful! Reason: {response.content}")
+    map_to_files(response.json()["files"], TEMPORARY_RESULTS, lzma.decompress)
+    metrics = {"status": "OK", "worker_id": worker_id, "simulation_time": response.json()["time"], "request_time": request_time}
+    return metrics
+  except Exception as e:
+    return {"status": "ERROR", "reason": str(e)}
 
 def _separate_results(input_dir, output_dir):
   for filename in glob.glob(f"{input_dir}/*"):
@@ -65,11 +71,3 @@ def run(how_many_samples, how_many_workers):
   metrics["full_map_time"] = map_time
   metrics["reduce_time"] = reduce_time
   return metrics
-
-
-    
-  
-    
-
-  
-
