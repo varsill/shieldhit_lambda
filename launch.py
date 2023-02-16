@@ -1,73 +1,47 @@
 import os
 import shutil
-import subprocess
-import requests
-from converters import *
-import glob
-from multiprocessing import Pool
-import time
-import functools
-import lzma
+from common import meassure_time
+from environments.mapper import Mapper
+from environments.reducer import Reducer
+from typing import Dict
 
-LAMBDA_URL = os.getenv("LAMBDA_URL")
-DAT_FILES = files_to_map(glob.glob("input/*.dat"), lzma.compress)
+INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 
-def _cmd(command: str):
-  return subprocess.check_output(command.split())
 
-def meassure_time(f):
-  start_time = time.time()
-  result = f()
-  end_time = time.time()
-  return result, end_time-start_time
+def run(
+    how_many_samples: int,
+    how_many_workers: int,
+    mapper_module: Mapper,
+    reducer_module: Reducer,
+) -> Dict:
+    """
+    A function that runs a given test case.
+    A test case is described with the arguments listed below.
 
-def _launch_worker(worker_id, how_many_samples):
-  try:
-    json_input = {"n": how_many_samples, "N": worker_id, "files": DAT_FILES}
-    response, request_time = meassure_time(lambda: requests.post(LAMBDA_URL, json=json_input))
-    os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
-    if response.status_code != 200:
-      raise Exception(f"Worker {worker_id}: reponse unsuccessful! Reason: {response.content}")
-    map_to_files(response.json()["files"], TEMPORARY_RESULTS, lzma.decompress)
-    metrics = {"status": "OK", "worker_id": worker_id, "simulation_time": response.json()["time"], "request_time": request_time}
-    return metrics
-  except Exception as e:
-    return {"status": "ERROR", "reason": str(e)}
+    Args:
+        how_many_samples (int): number of samples that should be generated
+        how_many_workers (int): number of workers that should be used for samples generation
+        mapper_module (Mapper): the module delivering the logic of sampling generation
+        reducer_module (Reducer): the module delivering the logic of samples gathering
 
-def _separate_results(input_dir, output_dir):
-  for filename in glob.glob(f"{input_dir}/*"):
-    directory_path, just_file_name = os.path.split(filename)
-    result_name, _, worker_id = just_file_name.rpartition("_")
-    result_subdir = f"{output_dir}/{result_name}"
-    os.makedirs(result_subdir, exist_ok=True)
-    shutil.move(filename, result_subdir)
-
-def execute_map(how_many_samples, how_many_workers):
-  samples_per_worker = int(how_many_samples/how_many_workers)
-  worker = functools.partial(_launch_worker, how_many_samples=samples_per_worker)
-  with Pool(how_many_workers) as process:
-    result = process.map_async(
-      worker, 
-      range(how_many_workers)
+    Returns:
+        Dict: a dictionary with metrics gathered within the test
+    """
+    mapper = mapper_module(
+        how_many_samples, how_many_workers, INPUT_FILES_DIR, TEMPORARY_RESULTS
     )
-    result.wait()
-  return {"mappers_time": result.get()}
+    reducer = reducer_module(TEMPORARY_RESULTS, FINAL_RESULTS)
 
-def execute_reduce(output_dir):
-  _separate_results(TEMPORARY_RESULTS, TEMPORARY_RESULTS)
-  for subdir in glob.glob(f"{TEMPORARY_RESULTS}/*"):
-    _cmd(f"binaries/convertmc.exe txt --many {subdir}/* {output_dir}")
-  shutil.rmtree(TEMPORARY_RESULTS)
+    os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
 
-def run(how_many_samples, how_many_workers):
-  metrics, map_time = meassure_time(
-    lambda: execute_map(how_many_samples, how_many_workers)
-  )
+    metrics, map_time = meassure_time(lambda: mapper.execute())
 
-  os.makedirs(FINAL_RESULTS, exist_ok=True)
-  _, reduce_time = meassure_time(lambda: execute_reduce(FINAL_RESULTS))
-  metrics["full_map_time"] = map_time
-  metrics["reduce_time"] = reduce_time
-  return metrics
+    os.makedirs(FINAL_RESULTS, exist_ok=True)
+    _, reduce_time = meassure_time(lambda: reducer.execute())
+    shutil.rmtree(TEMPORARY_RESULTS)
+
+    metrics["map_time"] = map_time
+    metrics["reduce_time"] = reduce_time
+    return metrics

@@ -1,2 +1,0 @@
-zip -j shieldhit_deploy.zip converters.py vendors/aws/reducer/lambda_function.py binaries/convertmc
-aws lambda update-function-code --function-name shieldhit_test_python_reducer --zip-file fileb://shieldhit_deploy.zip

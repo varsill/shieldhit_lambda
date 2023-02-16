@@ -6,3 +6,4 @@ convertmc*
 __pycache__/
 binaries/
 *.dump
+.vscode
