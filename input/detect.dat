@@ -37,9 +37,6 @@ Output
     Filename z_profile.bdo
     Geo CylZ_Mesh
     Quantity DoseGy 
-    Quantity Fluence Protons
-    Quantity Fluence Primaries
-    Quantity Fluence Secondary_protons
 
 Output
     Filename yz_profile.bdo

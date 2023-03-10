@@ -4,6 +4,7 @@ from common import meassure_time
 from environments.mapper import Mapper
 from environments.reducer import Reducer
 from typing import Dict
+import h5py
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
@@ -32,7 +33,7 @@ def run(
     mapper = mapper_module(
         how_many_samples, how_many_workers, INPUT_FILES_DIR, TEMPORARY_RESULTS
     )
-    reducer = reducer_module(TEMPORARY_RESULTS, FINAL_RESULTS)
+    reducer = reducer_module(TEMPORARY_RESULTS, FINAL_RESULTS, "hdf")
 
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
 
@@ -45,3 +46,4 @@ def run(
     metrics["map_time"] = map_time
     metrics["reduce_time"] = reduce_time
     return metrics
+

@@ -10,6 +10,7 @@ def simulation(event):
     N = event.get("N", 0)
 
     try:
+        subprocess.check_output(["rm", "-rf", "/tmp/*.bdo"])
         subprocess.check_output(["cp", "-rf", "shieldhit", "/tmp"])
         subprocess.check_output(["chmod", "a+x", "/tmp/shieldhit"])
     except Exception:

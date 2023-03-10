@@ -17,7 +17,7 @@ class Reducer(ReducerInterface):
         self._separate_results(self.input_files_dir, self.input_files_dir)
         for subdir in glob.glob(f"{self.input_files_dir}/*"):
             cmd(
-                f"binaries/convertmc.exe {self.operation} --many {subdir}/* {self.output_dir}"
+                f"binaries/convertmc {self.operation} --many {subdir}/* {self.output_dir}"
             )
 
     def _separate_results(self, input_dir, output_dir):

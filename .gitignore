@@ -6,4 +6,8 @@ convertmc*
 __pycache__/
 binaries/
 *.dump
-.vscode
+.vscode/
+*.dat
+*.bdo
+*.txt
+*.png
