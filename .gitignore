@@ -11,3 +11,5 @@ binaries/
 *.bdo
 *.txt
 *.png
+*.log
+*.h5

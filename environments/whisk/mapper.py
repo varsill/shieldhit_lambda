@@ -63,9 +63,10 @@ def _launch_worker(
             lambda: requests.post(lambda_url, json=json_input, verify=False)
         )
         os.makedirs(output_dir, exist_ok=True)
+
         if response.status_code != 200:
             raise Exception(
-                f"Worker {worker_id}: reponse unsuccessful! Reason: {response.content}"
+                f"Worker {worker_id}: response unsuccessful! Reason: {response.status_code} {response.content}"
             )
         Converters.map_to_files(response.json()["files"], output_dir, lzma.decompress)
         metrics = {

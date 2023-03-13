@@ -85,8 +85,6 @@ class Converters:
                 of the 'files_to_map' function. If not provided, the transform won't be applied.
         """
         for result_file_name in input_map.keys():
-            if result_file_name == "entrance.bdo":
-                print("ALLERT!", input_map.keys())
             with open(f"{output_directory}/{result_file_name}", "wb") as result_file:
                 content = input_map[result_file_name]
                 decoded = base64.b64decode(content)

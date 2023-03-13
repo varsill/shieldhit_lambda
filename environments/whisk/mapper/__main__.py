@@ -3,6 +3,8 @@ from shieldhit_executor import *
 import time
 
 def main(event):
+    # time.sleep(10)
+    # return {"statusCode": 200, "body": "xd"}
     try:
         start_time = time.time()
         result = simulation(event)
