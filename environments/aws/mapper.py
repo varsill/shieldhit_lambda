@@ -7,7 +7,7 @@ import functools
 from common import meassure_time
 import os
 from environments.mapper import Mapper as MapperInterface
-
+import time
 
 class Mapper(MapperInterface):
     """
@@ -38,9 +38,18 @@ class Mapper(MapperInterface):
         )
 
         with Pool(self.how_many_workers) as process:
-            result = process.map_async(worker, range(self.how_many_workers))
-            result.wait()
-        return {"workers_times": result.get()}
+            results = process.map_async(worker, range(self.how_many_workers))
+            results.wait()
+        
+        results = results.get()
+        for result in results:
+            try:
+                Converters.map_to_files(result["files"], self.output_dir, lzma.decompress, True)
+            except Exception as e:
+                print(e)
+            del result["files"]
+    
+        return {"workers_times": results}
 
 
 def _launch_worker(
@@ -63,12 +72,14 @@ def _launch_worker(
             raise Exception(
                 f"Worker {worker_id}: reponse unsuccessful! Reason: {response.content}"
             )
-        Converters.map_to_files(response.json()["files"], output_dir, lzma.decompress)
+        #Converters.map_to_files(response.json()["files"], output_dir, lzma.decompress, True)
+       
         metrics = {
             "status": "OK",
             "worker_id": worker_id,
             "simulation_time": response.json()["time"],
             "request_time": request_time,
+            "files": response.json()["files"]
         }
         return metrics
     except Exception as e:

@@ -42,6 +42,7 @@ class Mapper(MapperInterface):
             results.wait()
         
         results = results.get()
+
         how_many_successfully_ended = len([r for r in results if r["status"]=="OK"])
         print(f"SUCCESS/ALL: {how_many_successfully_ended}/{self.how_many_workers}")
         return {"workers_times": results}

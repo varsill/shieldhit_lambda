@@ -72,6 +72,7 @@ class Converters:
         input_map: Dict[str, str],
         output_directory: str,
         transform: Callable[[bytes], bytes] = _id,
+        memfd: bool = False
     ) -> None:
         """
         A function that takes a dictionary created with files_to_map() method and converts it back into the files out of which the
@@ -83,13 +84,23 @@ class Converters:
             transform (Callable[[bytes], bytes], optional): A function that will be applied to the contents of the encoded files before saving them in the filesystem.
                 To restore the original content of the file, the function should be an inverse of the function passed as the 'transform' argument
                 of the 'files_to_map' function. If not provided, the transform won't be applied.
+            memfd (boolean, optional): If True, the file's content won't be stored in a filesystem and will persists within the memory. A symlink between the file name and the file descriptor will
+                be created. If False, the file's content will be saved in the filesystem. Defaults to False.
         """
         for result_file_name in input_map.keys():
-            with open(f"{output_directory}/{result_file_name}", "wb") as result_file:
-                content = input_map[result_file_name]
-                decoded = base64.b64decode(content)
-                transformed = transform(decoded)
-                result_file.write(transformed)
+            content = input_map[result_file_name]
+            decoded = base64.b64decode(content)
+            transformed = transform(decoded)
+            if memfd == False:
+                with open(f"{output_directory}/{result_file_name}", "wb") as result_file:
+                    result_file.write(transformed)
+            else:
+                pid = os.getpid()
+                fd = os.memfd_create(result_file_name)
+                memfd_path = f"/proc/{pid}/fd/{fd}"
+                with open(memfd_path, "wb") as result_file:
+                    result_file.write(transformed)
+                os.symlink(memfd_path, f"{output_directory}/{result_file_name}")
 
     @staticmethod
     def json_file_to_files(
