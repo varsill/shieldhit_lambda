@@ -8,7 +8,7 @@ import h5py
 import numpy as np
 import os
 
-METRICS_RESULT_PATH = "metrics/results/ares_large.dump"
+METRICS_RESULT_PATH = "metrics/results/test3.dump"
 
 HOW_MANY_TRIES = 1
 

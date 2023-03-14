@@ -2,7 +2,7 @@ import pickle
 import pandas as pd
 import matplotlib.pyplot as plt
 
-RESULTS_DUMP_FILE = "metrics/results/aws_large.dump"
+RESULTS_DUMP_FILE = "metrics/results/test.dump"
 PLOT_FILE = "TIME.png"
 
 # to_plot = results.filter(axis="columns", items=["test_run_number", "params.number_of_workers"])

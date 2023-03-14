@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import h5py
 import numpy as np
 
-RESULTS_DUMP_FILE = "metrics/results/aws_large.dump"
+RESULTS_DUMP_FILE = "metrics/results/test.dump"
 PLOT_FILE = "DISTRIBUTION.png"
 
 def __load_hdf(file_path):

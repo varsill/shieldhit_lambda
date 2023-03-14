@@ -11,6 +11,13 @@ TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 
 
+def __remove_directory(dir):
+    # for root, dirs, files in os.walk(dir):
+    #     for file in files:
+    #         if os.path.islink(file):
+    #             os.remove(os.readlink(file))
+    shutil.rmtree(dir)
+
 def run(
     how_many_samples: int,
     how_many_workers: int,
@@ -41,7 +48,9 @@ def run(
 
     os.makedirs(FINAL_RESULTS, exist_ok=True)
     _, reduce_time = meassure_time(lambda: reducer.execute())
-    shutil.rmtree(TEMPORARY_RESULTS)
+    
+    __remove_directory(TEMPORARY_RESULTS)
+    
 
     metrics["map_time"] = map_time
     metrics["reduce_time"] = reduce_time

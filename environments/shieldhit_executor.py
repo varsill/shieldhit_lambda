@@ -19,7 +19,7 @@ def simulation(event):
     
     Converters.map_to_files(event["files"], tmpdir, lzma.decompress)
      
-    subprocess.check_output(["/action/shieldhit", "-n", str(n), "-N", str(N), tmpdir])
+    subprocess.check_output(["shieldhit", "-n", str(n), "-N", str(N), tmpdir])
 
     all_result_files = glob.glob(f"{tmpdir}/*.bdo")
 
