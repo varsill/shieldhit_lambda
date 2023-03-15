@@ -17,6 +17,7 @@ class Mapper(ABC):
         how_many_workers: int,
         input_files_dir: str,
         output_dir: str,
+        should_produce_hdf: bool
     ):
         """
         Module's constructor.
@@ -26,6 +27,7 @@ class Mapper(ABC):
             how_many_workers (int): Number of workers that should be used to generate samples
             input_files_dir (str): location of the input configuration files (.dat files)
             output_dir (str): directory where the result .bdo files will be written to
+            should_produce_hdf: if True, a hdf files will be returned. Otherwise, .bdo files will be returned
         """
         pass
 

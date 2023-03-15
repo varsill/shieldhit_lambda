@@ -9,7 +9,7 @@ import h5py
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
-
+SHOULD_PRODUCE_HDF = False
 
 def __remove_directory(dir):
     # for root, dirs, files in os.walk(dir):
@@ -38,7 +38,7 @@ def run(
         Dict: a dictionary with metrics gathered within the test
     """
     mapper = mapper_module(
-        how_many_samples, how_many_workers, INPUT_FILES_DIR, TEMPORARY_RESULTS
+        how_many_samples, how_many_workers, INPUT_FILES_DIR, TEMPORARY_RESULTS, SHOULD_PRODUCE_HDF
     )
     reducer = reducer_module(TEMPORARY_RESULTS, FINAL_RESULTS, "hdf")
 
@@ -46,10 +46,10 @@ def run(
 
     metrics, map_time = meassure_time(lambda: mapper.execute())
 
-    os.makedirs(FINAL_RESULTS, exist_ok=True)
-    _, reduce_time = meassure_time(lambda: reducer.execute())
+    # os.makedirs(FINAL_RESULTS, exist_ok=True)
+    # _, reduce_time = meassure_time(lambda: reducer.execute())
     
-    __remove_directory(TEMPORARY_RESULTS)
+    # __remove_directory(TEMPORARY_RESULTS)
     
 
     metrics["map_time"] = map_time

@@ -20,11 +20,14 @@ class RemoteMapper(MapperInterface):
         how_many_workers: int,
         input_files_dir: str,
         output_dir: str,
+        should_produce_hdf: bool
+
     ):
         self.how_many_samples = how_many_samples
         self.how_many_workers = how_many_workers
         self.input_files_dir = input_files_dir
         self.output_dir = output_dir
+        self.should_produce_hdf = should_produce_hdf
         self.lambda_url = os.getenv("LAMBDA_URL")
 
     def execute(self):
@@ -35,6 +38,7 @@ class RemoteMapper(MapperInterface):
             input_files_dir=self.input_files_dir,
             output_dir=self.output_dir,
             lambda_url=self.lambda_url,
+            should_produce_hdf=self.should_produce_hdf
         )
 
         with Pool(self.how_many_workers) as process:
@@ -48,7 +52,7 @@ class RemoteMapper(MapperInterface):
         print(f"SUCCESS/ALL: {len(successfull_results)}/{self.how_many_workers}")
         for result in successfull_results:
             try:
-                Converters.map_to_files(result["files"], self.output_dir, lzma.decompress, True)
+                Converters.map_to_files(result["files"], self.output_dir, lzma.decompress, False)
                 del result["files"]
             except Exception as e:
                 print("execute ERROR", e)
@@ -63,12 +67,13 @@ def _launch_worker(
     input_files_dir: str,
     output_dir: str,
     lambda_url: str,
+    should_produce_hdf: bool
 ):
     try:
         dat_files = Converters.files_to_map(
             glob.glob(f"{input_files_dir}/*"), lzma.compress
         )
-        json_input = {"n": how_many_samples, "N": worker_id, "files": dat_files}
+        json_input = {"n": how_many_samples, "N": worker_id, "files": dat_files, "should_produce_hdf": should_produce_hdf}
         response, request_time = meassure_time(
             lambda: requests.post(lambda_url, json=json_input)
         )
