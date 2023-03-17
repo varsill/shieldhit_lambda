@@ -9,7 +9,7 @@ import h5py
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
-SHOULD_PRODUCE_HDF = False
+SHOULD_PRODUCE_HDF = True
 
 def __remove_directory(dir):
     # for root, dirs, files in os.walk(dir):
@@ -46,10 +46,10 @@ def run(
 
     metrics, map_time = meassure_time(lambda: mapper.execute())
 
-    # os.makedirs(FINAL_RESULTS, exist_ok=True)
-    # _, reduce_time = meassure_time(lambda: reducer.execute())
+    os.makedirs(FINAL_RESULTS, exist_ok=True)
+    _, reduce_time = meassure_time(lambda: reducer.execute())
     
-    # __remove_directory(TEMPORARY_RESULTS)
+    __remove_directory(TEMPORARY_RESULTS)
     
 
     metrics["map_time"] = map_time

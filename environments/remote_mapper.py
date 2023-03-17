@@ -51,6 +51,7 @@ class RemoteMapper(MapperInterface):
         
         print(f"SUCCESS/ALL: {len(successfull_results)}/{self.how_many_workers}")
         for result in successfull_results:
+            print(result)
             try:
                 Converters.map_to_files(result["files"], self.output_dir, lzma.decompress, False)
                 del result["files"]
@@ -75,7 +76,7 @@ def _launch_worker(
         )
         json_input = {"n": how_many_samples, "N": worker_id, "files": dat_files, "should_produce_hdf": should_produce_hdf}
         response, request_time = meassure_time(
-            lambda: requests.post(lambda_url, json=json_input)
+            lambda: requests.post(lambda_url, json=json_input, verify=False)
         )
         os.makedirs(output_dir, exist_ok=True)
         if response.status_code != 200:

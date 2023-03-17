@@ -1,0 +1,107 @@
+Metadata-Version: 2.1
+Name: pymchelper
+Version: 1.11.4
+Summary: Python toolkit for SHIELD-HIT12A and FLUKA
+Home-page: https://github.com/DataMedSci/pymchelper
+Author: pymchelper team
+Author-email: leszek.grzanka@gmail.com
+License: MIT
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Scientific/Engineering :: Physics
+Classifier: Environment :: Console
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Requires-Python: >=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*
+Description-Content-Type: text/markdown
+Requires-Dist: numpy (>=1.21) ; python_version == "3.10"
+Requires-Dist: numpy (<1.16,>=1.11) ; python_version == "3.4" or python_version == "2.7"
+Requires-Dist: enum34 ; python_version == "3.4" or python_version == "2.7"
+Requires-Dist: numpy (<1.19,>=1.11) ; python_version == "3.5"
+Requires-Dist: numpy (<1.20,>=1.12) ; python_version == "3.6"
+Requires-Dist: numpy (>=1.15) ; python_version == "3.7"
+Requires-Dist: numpy (>=1.18) ; python_version == "3.8"
+Requires-Dist: numpy (>=1.20) ; python_version == "3.9"
+Provides-Extra: excel
+Requires-Dist: xlwt ; extra == 'excel'
+Provides-Extra: full
+Requires-Dist: matplotlib ; extra == 'full'
+Requires-Dist: scipy ; extra == 'full'
+Requires-Dist: h5py ; extra == 'full'
+Requires-Dist: xlwt ; extra == 'full'
+Requires-Dist: hipsterplot ; extra == 'full'
+Requires-Dist: bashplotlib ; extra == 'full'
+Requires-Dist: pytrip98 (>=3.6.1) ; (python_version == "3.10") and extra == 'full'
+Requires-Dist: pytrip98 ; (python_version >= "3.5" and python_version < "3.10") and extra == 'full'
+Provides-Extra: hdf
+Requires-Dist: h5py ; extra == 'hdf'
+Provides-Extra: image
+Requires-Dist: matplotlib ; extra == 'image'
+Provides-Extra: pytrip
+Requires-Dist: scipy ; extra == 'pytrip'
+Requires-Dist: pytrip98 (>=3.6.1) ; (python_version == "3.10") and extra == 'pytrip'
+Requires-Dist: pytrip98 ; (python_version >= "3.5" and python_version < "3.10") and extra == 'pytrip'
+
+# pymchelper
+
+  
+**pymchelper** is a toolkit for aiding users of the particle transport codes, such as [FLUKA](http://fluka.cern/) and [SHIELD-HIT12A](https://shieldhit.org/).
+Particle transport codes produce binary files (especially when running on dedicated computing clusters).
+It provides a command line program `convertmc` which can convert these binary files to graphs:
+```
+convertmc image --many "*.bdo"
+```
+
+<p float="left">
+  <img src="/docs/default_1d.png" width="30%" />
+  <img src="/docs/default_2d.png" width="30%" /> 
+</p>
+
+This converter is capable of converting binary output to many other formats, like CSV, XLS or HDF.
+  
+Another feature of the toolkit is a command line utility `runmc` which speeds up particle transport simulation by splitting the calculation on multiple processes and merging the results
+
+```
+runmc --jobs 16 --out-type txt directory_with_input_files
+```
+ 
+Toolkit can also serve as a library in Python language, which can be used by programmers and data scientists to read data from binary files into convenient Python objects. This allows further data processing using other Python tools and libraries.
+
+**pymchelper** works under Linux, Windows and Mac OSX operating systems.
+
+## Installation
+
+To install **pymchelper** as a python package, type:
+```
+pip install pymchelper[all]
+```
+
+On Linux systems from Debian family **pymchelper** can be installed using `apt` package manager::
+```
+wget --quiet --output-document - https://datamedsci.github.io/deb_package_repository/public.gpg | sudo apt-key add -
+sudo wget --quiet --output-document /etc/apt/sources.list.d/datamedsci.list https://datamedsci.github.io/deb_package_repository/datamedsci.list
+sudo apt update
+sudo apt install pymchelper
+```
+
+## Documentation
+
+-------------
+
+ Full pymchelper documentation can be found here: https://datamedsci.github.io/pymchelper/index.html
+
+See [Getting Started](https://datamedsci.github.io/pymchelper/getting_started.html) for installation and basic information, and the [User's Guide](https://datamedsci.github.io/pymchelper/user_guide.html) for an overview of how to use the project.
+
+
