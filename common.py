@@ -1,6 +1,10 @@
 import subprocess
+from multiprocessing import Pool
 import time
 from typing import Callable, Tuple, TypeVar
+import os
+import h5py
+import numpy as np
 
 T = TypeVar("T")
 
@@ -32,3 +36,18 @@ def meassure_time(f: Callable[[], T]) -> Tuple[T, float]:
     result = f()
     end_time = time.time()
     return result, end_time - start_time
+
+def execute_concurrently(function, N):
+  if N == 1:
+    return [function()]
+  else:
+    with Pool(N) as process:
+        results = process.map_async(function, range(N))
+        results.wait()
+    return results.get()
+
+def load_hdf_result_file(file_path):
+    if not os.path.isfile(file_path):
+        return None
+    f = h5py.File(file_path, 'r')
+    return np.array(f['data'])

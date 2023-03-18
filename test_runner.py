@@ -1,10 +1,7 @@
-from launch import run, FINAL_RESULTS
+from launchers.whisk_mapper_local_reducer import launch_test
 from common import meassure_time
 import pickle
 import shutil
-from environments.whisk.mapper import Mapper
-from environments.local.reducer import Reducer
-import h5py
 import numpy as np
 import os
 
@@ -14,6 +11,7 @@ HOW_MANY_TRIES = 1
 
 TEST_CASES = [
     {"number_of_workers": 10, "number_of_samples": 1000},
+    {"number_of_workers": 20, "number_of_samples": 1000},
     # {"number_of_workers": 150, "number_of_samples": 1000000},
     # {"number_of_workers": 200, "number_of_samples": 1000000},
     # {"number_of_workers": 250, "number_of_samples": 1000000},
@@ -46,23 +44,14 @@ TEST_CASES = [
 ]
 TEST_CASES.reverse()
 
-def __load_result_file(file_path):
-    if not os.path.isfile(file_path):
-        return None
-    f = h5py.File(file_path, 'r')
-    return np.array(f['data'])
-
-
 if __name__ == "__main__":
     test_results = []
     for test_case_params in TEST_CASES:
         for try_number in range(HOW_MANY_TRIES):
             metrics, duration = meassure_time(
-                lambda: run(
+                lambda: launch_test(
                     how_many_samples=test_case_params["number_of_samples"],
-                    how_many_workers=test_case_params["number_of_workers"],
-                    mapper_module=Mapper,
-                    reducer_module=Reducer,
+                    how_many_workers=test_case_params["number_of_workers"]
                 )
             )
             metrics["total_duration"] = duration
@@ -70,10 +59,9 @@ if __name__ == "__main__":
             test_instance = {
                 "params": test_case_params,
                 "metrics": metrics,
-                "test_run_number": try_number,
-                "hdf_results": __load_result_file(f"{FINAL_RESULTS}/z_profile_.h5")
+                "test_run_number": try_number
             }
-            shutil.rmtree(FINAL_RESULTS)
+            
             test_results.append(test_instance)
 
     with open(METRICS_RESULT_PATH, "wb") as output_file:
