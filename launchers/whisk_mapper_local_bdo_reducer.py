@@ -2,7 +2,7 @@ import os
 import shutil
 from common import meassure_time, execute_concurrently, load_hdf_result_file
 from workers.aws_mapper import launch_worker as launch_mapper
-from workers.local_reducer import launch_worker as launch_reducer
+from workers.local_bdo_reducer import launch_worker as launch_reducer
 from typing import Dict
 import h5py
 import lzma

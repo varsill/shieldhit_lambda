@@ -5,6 +5,8 @@ from typing import Callable, Tuple, TypeVar
 import os
 import h5py
 import numpy as np
+import glob
+import shutil
 
 T = TypeVar("T")
 
@@ -51,3 +53,13 @@ def load_hdf_result_file(file_path):
         return None
     f = h5py.File(file_path, 'r')
     return np.array(f['data'])
+
+def separate_results(input_dir, output_dir):
+    for filename in glob.glob(f"{input_dir}/*"):
+        _directory_path, just_file_name = os.path.split(filename)
+        result_name, _, _worker_id = just_file_name.rpartition("_")
+        result_subdir = f"{output_dir}/{result_name}"
+        os.makedirs(result_subdir, exist_ok=True)
+        if os.path.exists(os.path.join(result_subdir, filename)):
+          os.remove(os.path.join(result_subdir, filename))
+        shutil.move(filename, result_subdir)

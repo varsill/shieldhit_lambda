@@ -1,4 +1,4 @@
-from launchers.whisk_mapper_local_reducer import launch_test
+from launchers.whisk_mapper_local_hdf_reducer import launch_test
 from common import meassure_time
 import pickle
 import shutil
