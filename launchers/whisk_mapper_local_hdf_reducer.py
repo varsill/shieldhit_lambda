@@ -1,6 +1,6 @@
 import os
 import shutil
-from common import meassure_time, execute_concurrently, load_hdf_result_file
+from common import meassure_time, execute_concurrently, load_hdf_result_file, separate_results
 from workers.aws_mapper import launch_worker as launch_mapper
 from workers.local_hdf_reducer import launch_worker as launch_reducer
 from typing import Dict
@@ -10,7 +10,8 @@ import functools
 from common import meassure_time
 from converters import Converters
 import glob
-
+from datatypes.filesystem import FilesystemBinary, FilesystemHDF
+import lzma
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
@@ -38,9 +39,7 @@ def launch_test(
     metrics = {}
     samples_per_worker = int(how_many_samples / how_many_workers)
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
-    dat_files = Converters.files_to_map(
-            glob.glob(f"{INPUT_FILES_DIR}/*"), lzma.compress
-        )
+    dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory().read_all()
     mapper_function = functools.partial(
         launch_mapper,
         how_many_samples=samples_per_worker,
@@ -56,22 +55,30 @@ def launch_test(
     workers_times = []
 
     for r in successfull_mapper_results:
-        Converters.map_to_files(r["files"], TEMPORARY_RESULTS, lzma.decompress, SHOULD_USE_MEMFD)
+        r["files"].to_filesystem(TEMPORARY_RESULTS)
         del r["files"]
         workers_times.append(r)
-    
-    metrics["workers_times"]=workers_times
-    
-    reducer_function =  functools.partial(
-        launch_reducer,
-        input_files_dir=TEMPORARY_RESULTS,
-        output_dir=FINAL_RESULTS, 
-    )
-    os.makedirs(FINAL_RESULTS, exist_ok=True)
-  
-    reducer_results, reduce_time = meassure_time(lambda: execute_concurrently(reducer_function, 1))
 
-    metrics["hdf_results"] = reducer_results[0]["z_profile.h5"]
+    metrics["workers_times"]=workers_times
+
+    separate_results(TEMPORARY_RESULTS, TEMPORARY_RESULTS)
+
+    os.makedirs(FINAL_RESULTS, exist_ok=True)
+    cumulative_reduce_time = 0
+    for subdir in glob.glob(f"{TEMPORARY_RESULTS}/*"):
+        _directory_path, just_file_name = os.path.split(subdir)
+        output_file_name = f"{just_file_name}.h5"
+        reducer_function = functools.partial(
+            launch_reducer,
+            input_files=FilesystemHDF(subdir),
+            output_file_name=output_file_name
+        )
+
+        reducer_result, reduce_time = meassure_time(lambda: execute_concurrently(reducer_function, 1))
+
+        cumulative_reduce_time += reduce_time
+        metrics["hdf_results"] = reducer_result[0].read("z_profile.h5")
+        reducer_result[0].to_filesystem(FINAL_RESULTS)
 
     shutil.rmtree(TEMPORARY_RESULTS)
     shutil.rmtree(FINAL_RESULTS)

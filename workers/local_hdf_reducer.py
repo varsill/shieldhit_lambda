@@ -4,19 +4,16 @@ import numpy as np
 from converters import Converters
 import os
 import h5py
+from datatypes.in_memory import InMemoryHDF
 
+def launch_worker(input_files, output_file_name):
+  all_hdf_files = input_files.to_memory().read_all()
+  filenames = list(all_hdf_files.keys())
+  head, *tail = filenames
+  cumulative = all_hdf_files[head]
 
-def launch_worker(input_files_dir, output_dir):
-  separate_results(input_files_dir, input_files_dir)
-  results = {}
-  for subdir in glob.glob(f"{input_files_dir}/*"):
-    all_hdf_files = [hdf_file for hdf_file in glob.glob(f"{subdir}/*.h5")]
-    cumulative = load_hdf_result_file(all_hdf_files[0])
+  for filename in tail:
+    cumulative=cumulative+all_hdf_files[filename]
 
-    for file in all_hdf_files[1:]:
-      cumulative=cumulative+load_hdf_result_file(hdf_file)
+  return InMemoryHDF({output_file_name: cumulative/len(filenames)})
 
-    _directory_path, just_file_name = os.path.split(subdir)
-    output_file_name = f"{just_file_name}.h5"
-    results[output_file_name] = cumulative/len(all_hdf_files) 
-  return results

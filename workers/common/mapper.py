@@ -28,7 +28,13 @@ def simulation(event):
     if should_produce_hdf:
         subprocess.check_output(["./convertmc", "hdf", "--many", f"{tmpdir}/*.bdo", tmpdir])
         all_hdf_files = glob.glob(f"{tmpdir}/*.h5")
-        result_map = Converters.files_to_map(all_hdf_files, lzma.compress)
+        all_hdf_files_with_changed_name = []
+        for filename in all_hdf_files:
+            just_filename, extension = os.path.splitext(filename)
+            all_hdf_files_with_changed_name.append(f"{just_filename}{N}{extension}")
+        for old_filename, new_filename in zip(all_hdf_files, all_hdf_files_with_changed_name):
+            os.rename(old_filename, new_filename)
+        result_map = Converters.files_to_map(all_hdf_files_with_changed_name, lzma.compress)
     else:
         result_map = Converters.files_to_map(all_bdo_files, lzma.compress)
 

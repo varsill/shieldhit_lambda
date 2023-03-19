@@ -1,12 +1,11 @@
-from common import cmd, separate_results
+from common import cmd
 import shutil
 import glob
 import os
+from datatypes.filesystem import FilesystemHDF
 
-def launch_worker(input_files_dir: str, output_dir: str, operation: str = "image"):
-    separate_results(input_files_dir, input_files_dir)
-    for subdir in glob.glob(f"{input_files_dir}/*"):
-        cmd(
-            f"binaries/convertmc {operation} --many {subdir}/* {output_dir}"
-        )
-
+def launch_worker(input_files: str, output_dir: str, operation: str = "image"):
+    cmd(
+        f"binaries/convertmc {operation} --many {input_files.get_directory()}/* {output_dir}"
+    )
+    return FilesystemHDF(output_dir)

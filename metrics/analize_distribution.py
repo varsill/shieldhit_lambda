@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import h5py
 import numpy as np
 
-RESULTS_DUMP_FILE = "metrics/results/test3.dump"
+RESULTS_DUMP_FILE = "metrics/results/aws_test5.dump"
 PLOT_FILE = "DISTRIBUTION.png"
 
 def __load_hdf(file_path):
@@ -28,7 +28,6 @@ for i, value in enumerate(np.array(results_dump['metrics.hdf_results'].values)):
     indices_to_replace.append(i)
 
 zeroes = np.zeros(results_ref.shape)
-print(results_dump['metrics.hdf_results'])
 results_dump['metrics.hdf_results'].update(pd.Series([zeroes]*len(indices_to_replace), index=indices_to_replace))
 
 results_dump_avg = results_dump.groupby("params.number_of_workers").agg(

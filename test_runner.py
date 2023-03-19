@@ -1,26 +1,25 @@
-from launchers.whisk_mapper_local_hdf_reducer import launch_test
+from launchers.whisk_mapper_local_bdo_reducer import launch_test
 from common import meassure_time
 import pickle
 import shutil
 import numpy as np
 import os
 
-METRICS_RESULT_PATH = "metrics/results/test3.dump"
+METRICS_RESULT_PATH = "metrics/results/aws_test5.dump"
 
 HOW_MANY_TRIES = 1
 
 TEST_CASES = [
-    {"number_of_workers": 10, "number_of_samples": 1000},
-    {"number_of_workers": 20, "number_of_samples": 1000},
-    # {"number_of_workers": 150, "number_of_samples": 1000000},
-    # {"number_of_workers": 200, "number_of_samples": 1000000},
-    # {"number_of_workers": 250, "number_of_samples": 1000000},
-    # {"number_of_workers": 300, "number_of_samples": 1000000},
-    # {"number_of_workers": 350, "number_of_samples": 1000000},
-    # {"number_of_workers": 400, "number_of_samples": 1000000},
-    # {"number_of_workers": 800, "number_of_samples": 1000000},
-    # {"number_of_workers": 900, "number_of_samples": 1000000},
-    # {"number_of_workers": 1000, "number_of_samples": 1000000},
+    {"number_of_workers": 100, "number_of_samples": 1000000},
+    {"number_of_workers": 150, "number_of_samples": 1000000},
+    {"number_of_workers": 200, "number_of_samples": 1000000},
+    {"number_of_workers": 250, "number_of_samples": 1000000},
+    {"number_of_workers": 300, "number_of_samples": 1000000},
+    {"number_of_workers": 350, "number_of_samples": 1000000},
+    {"number_of_workers": 400, "number_of_samples": 1000000},
+    {"number_of_workers": 800, "number_of_samples": 1000000},
+    {"number_of_workers": 900, "number_of_samples": 1000000},
+    {"number_of_workers": 1000, "number_of_samples": 1000000},
     # {"number_of_workers": 11, "number_of_samples": 10000},
     # {"number_of_workers": 12, "number_of_samples": 10000},
     # {"number_of_workers": 13, "number_of_samples": 10000},
