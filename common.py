@@ -3,13 +3,14 @@ from multiprocessing import Pool
 import time
 from typing import Callable, Tuple, TypeVar
 import os
-import h5py
-import numpy as np
 import glob
 import shutil
+from converters import Converters
+import lzma
+
+SHOULD_USE_MEMFD=False
 
 T = TypeVar("T")
-
 
 def cmd(command: str):
     """
@@ -41,7 +42,7 @@ def meassure_time(f: Callable[[], T]) -> Tuple[T, float]:
 
 def execute_concurrently(function, N):
   if N == 1:
-    return [function()]
+    return [function(worker_id=1)]
   else:
     with Pool(N) as process:
         results = process.map_async(function, range(N))
@@ -49,6 +50,8 @@ def execute_concurrently(function, N):
     return results.get()
 
 def load_hdf_result_file(file_path):
+    import h5py
+    import numpy as np
     if not os.path.isfile(file_path):
         return None
     f = h5py.File(file_path, 'r')
@@ -63,3 +66,9 @@ def separate_results(input_dir, output_dir):
         if os.path.exists(os.path.join(result_subdir, filename)):
           os.remove(os.path.join(result_subdir, filename))
         shutil.move(filename, result_subdir)
+
+def serialize(list_of_filenames):
+    return Converters.files_to_map(list_of_filenames, lzma.compress)
+
+def deserialize(files_map, directory):
+    return Converters.map_to_files(files_map, directory, lzma.decompress, SHOULD_USE_MEMFD)

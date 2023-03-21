@@ -1,8 +1,9 @@
 import requests
-from common import meassure_time
+from common import meassure_time, deserialize
 import os
 from datatypes.in_memory import InMemoryBinary
 import lzma
+
 os.environ["PYTHONWARNINGS"]="ignore:Unverified HTTPS request"
 
 def invoke_remote_mapper(worker_id, how_many_samples, files, lambda_url, should_produce_hdf):
@@ -14,11 +15,12 @@ def invoke_remote_mapper(worker_id, how_many_samples, files, lambda_url, should_
           f"Worker {worker_id}: reponse unsuccessful! Reason: {response.content}"
       )
   
+  
   result = {
       "status": "OK",
       "worker_id": worker_id,
       "simulation_time": response.json()["time"],
       "request_time": request_time,
-      "files": InMemoryBinary(response.json()["files"], transform=lzma.decompress)
+      "files": response.json()["files"]
   }
   return result

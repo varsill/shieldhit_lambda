@@ -84,7 +84,7 @@ class Converters:
             transform (Callable[[bytes], bytes], optional): A function that will be applied to the contents of the encoded files before saving them in the filesystem.
                 To restore the original content of the file, the function should be an inverse of the function passed as the 'transform' argument
                 of the 'files_to_map' function. If not provided, the transform won't be applied.
-            memfd (boolean, optional): If True, the file's content won't be stored in a filesystem and will persists within the memory. A symlink between the file name and the file descriptor will
+            memfd (boolean, optional): If True, the file's content won't be stored in a filesystem and will persist within the memory. A symlink between the file name and the file descriptor will
                 be created. If False, the file's content will be saved in the filesystem. Defaults to False.
         """
         for result_file_name in input_map.keys():

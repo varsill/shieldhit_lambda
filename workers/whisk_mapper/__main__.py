@@ -1,9 +1,11 @@
 import json
 from mapper import simulation
 import time
+import subprocess
 
 def main(event):
     try:
+        time.sleep(100)
         start_time = time.time()
         result = simulation(event)
         end_time = time.time()

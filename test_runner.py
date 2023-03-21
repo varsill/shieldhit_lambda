@@ -1,4 +1,4 @@
-from launchers.whisk_mapper_local_bdo_reducer import launch_test
+from launchers.remote_mapper_local_hdf_reducer import launch_test
 from common import meassure_time
 import pickle
 import shutil
@@ -10,16 +10,16 @@ METRICS_RESULT_PATH = "metrics/results/aws_test5.dump"
 HOW_MANY_TRIES = 1
 
 TEST_CASES = [
-    {"number_of_workers": 100, "number_of_samples": 1000000},
-    {"number_of_workers": 150, "number_of_samples": 1000000},
-    {"number_of_workers": 200, "number_of_samples": 1000000},
-    {"number_of_workers": 250, "number_of_samples": 1000000},
-    {"number_of_workers": 300, "number_of_samples": 1000000},
-    {"number_of_workers": 350, "number_of_samples": 1000000},
-    {"number_of_workers": 400, "number_of_samples": 1000000},
-    {"number_of_workers": 800, "number_of_samples": 1000000},
-    {"number_of_workers": 900, "number_of_samples": 1000000},
-    {"number_of_workers": 1000, "number_of_samples": 1000000},
+    {"number_of_workers": 1, "number_of_samples": 1000},
+    # {"number_of_workers": 150, "number_of_samples": 1000000},
+    # {"number_of_workers": 200, "number_of_samples": 1000000},
+    # {"number_of_workers": 250, "number_of_samples": 1000000},
+    # {"number_of_workers": 300, "number_of_samples": 1000000},
+    # {"number_of_workers": 350, "number_of_samples": 1000000},
+    # {"number_of_workers": 400, "number_of_samples": 1000000},
+    # {"number_of_workers": 800, "number_of_samples": 1000000},
+    # {"number_of_workers": 900, "number_of_samples": 1000000},
+    # {"number_of_workers": 1000, "number_of_samples": 1000000},
     # {"number_of_workers": 11, "number_of_samples": 10000},
     # {"number_of_workers": 12, "number_of_samples": 10000},
     # {"number_of_workers": 13, "number_of_samples": 10000},
@@ -41,7 +41,7 @@ TEST_CASES = [
     # {"number_of_workers": 80, "number_of_samples": 10000},
     # {"number_of_workers": 100, "number_of_samples": 10000},
 ]
-TEST_CASES.reverse()
+#TEST_CASES.reverse()
 
 if __name__ == "__main__":
     test_results = []
@@ -54,7 +54,9 @@ if __name__ == "__main__":
                 )
             )
             metrics["total_duration"] = duration
-            
+            print("total_duration", metrics["total_duration"])
+            print("map_time", metrics["map_time"])
+            print("reduce_time", metrics["reduce_time"])
             test_instance = {
                 "params": test_case_params,
                 "metrics": metrics,
