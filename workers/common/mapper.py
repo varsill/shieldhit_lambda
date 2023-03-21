@@ -1,7 +1,7 @@
 import subprocess
 import glob
 import os
-from common import serialize, deserialize
+from common import serialize, deserialize, mktemp
 
 def simulation(event):
     n = event.get("n", 1000)
@@ -15,7 +15,7 @@ def simulation(event):
     except Exception:
         pass
     
-    tmpdir = subprocess.check_output(["mktemp", "-d"]).decode()[:-1]
+    tmpdir = mktemp()
    
     deserialize(event["files"], tmpdir)
      

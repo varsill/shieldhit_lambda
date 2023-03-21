@@ -91,7 +91,7 @@ class Converters:
             content = input_map[result_file_name]
             decoded = base64.b64decode(content)
             transformed = transform(decoded)
-            if memfd == False:
+            if not memfd:
                 with open(f"{output_directory}/{result_file_name}", "wb") as result_file:
                     result_file.write(transformed)
             else:
@@ -100,7 +100,9 @@ class Converters:
                 memfd_path = f"/proc/{pid}/fd/{fd}"
                 with open(memfd_path, "wb") as result_file:
                     result_file.write(transformed)
-                os.symlink(memfd_path, f"{output_directory}/{result_file_name}")
+                os.symlink(
+                    memfd_path,
+                    f"{output_directory}/{result_file_name}")
 
     @staticmethod
     def json_file_to_files(

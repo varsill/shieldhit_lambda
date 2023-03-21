@@ -15,16 +15,12 @@ python3 -m pip install \
     --implementation cp \
     --python 3.8 \
     --only-binary=:all: --upgrade \
-    pymchelper numpy==1.21 h5py==3.1
+    pymchelper
 
-# python3 -m pip install \
-#     --platform manylinux2014_x86_64 \
-#     --target=shieldhit_deploy \
-#     --implementation cp \
-#     --python 3.8 \
-#     --only-binary=:all: --upgrade \
-#     h5py
-#rm -rf shieldhit_deploy/numpy*
+# workaround - the Singularity image has h5py and numpy installed with the proper native dependencies,
+# so we don't want to use the dependencies installed as side dependencies to pymchelper in the shieldhit_deploy directory
+rm -rf shieldhit_deploy/numpy*
+rm -rf shieldhit_deploy/h5py*
 
 (cd shieldhit_deploy/ && zip -r ../shieldhit_deploy.zip .)
 ./binaries/wsk -i action update shieldHit shieldhit_deploy.zip --kind python:3

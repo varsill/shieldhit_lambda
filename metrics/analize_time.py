@@ -2,7 +2,7 @@ import pickle
 import pandas as pd
 import matplotlib.pyplot as plt
 
-RESULTS_DUMP_FILE = "metrics/results/aws_test5.dump"
+RESULTS_DUMP_FILE = "metrics/results/just_test.dump"
 PLOT_FILE = "TIME.png"
 
 # to_plot = results.filter(axis="columns", items=["test_run_number", "params.number_of_workers"])
@@ -30,7 +30,6 @@ def plot(results):
     ).reset_index()
 
     results_std = results.groupby("params.number_of_workers").std().fillna(0)
-
 
     x = results_avg["params.number_of_workers"]
     plt.errorbar(x, results_avg["metrics.map_time"], results_std["metrics.map_time"], label="Map time")

@@ -8,9 +8,10 @@ import shutil
 from converters import Converters
 import lzma
 
-SHOULD_USE_MEMFD=False
+SHOULD_USE_MEMFD = False
 
 T = TypeVar("T")
+
 
 def cmd(command: str):
     """
@@ -40,14 +41,16 @@ def meassure_time(f: Callable[[], T]) -> Tuple[T, float]:
     end_time = time.time()
     return result, end_time - start_time
 
+
 def execute_concurrently(function, N):
-  if N == 1:
-    return [function(worker_id=1)]
-  else:
-    with Pool(N) as process:
-        results = process.map_async(function, range(N))
-        results.wait()
-    return results.get()
+    if N == 1:
+        return [function()]
+    else:
+        with Pool(N) as process:
+            results = process.map_async(function, range(N))
+            results.wait()
+        return results.get()
+
 
 def load_hdf_result_file(file_path):
     import h5py
@@ -57,6 +60,7 @@ def load_hdf_result_file(file_path):
     f = h5py.File(file_path, 'r')
     return np.array(f['data'])
 
+
 def separate_results(input_dir, output_dir):
     for filename in glob.glob(f"{input_dir}/*"):
         _directory_path, just_file_name = os.path.split(filename)
@@ -64,11 +68,20 @@ def separate_results(input_dir, output_dir):
         result_subdir = f"{output_dir}/{result_name}"
         os.makedirs(result_subdir, exist_ok=True)
         if os.path.exists(os.path.join(result_subdir, filename)):
-          os.remove(os.path.join(result_subdir, filename))
+            os.remove(os.path.join(result_subdir, filename))
         shutil.move(filename, result_subdir)
+
 
 def serialize(list_of_filenames):
     return Converters.files_to_map(list_of_filenames, lzma.compress)
 
+
 def deserialize(files_map, directory):
-    return Converters.map_to_files(files_map, directory, lzma.decompress, SHOULD_USE_MEMFD)
+    return Converters.map_to_files(
+        files_map,
+        directory,
+        lzma.decompress,
+        SHOULD_USE_MEMFD)
+
+def mktemp():
+    return subprocess.check_output(["mktemp", "-d"]).decode()[:-1]

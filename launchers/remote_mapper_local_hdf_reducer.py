@@ -12,7 +12,7 @@ from converters import Converters
 import glob
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
 import lzma
-from launchers.common.remote_mapper import *
+from workers.common.remote_mapper_invocation_api import RemoteMapperEnvironment, resolve_mapper
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
@@ -22,7 +22,9 @@ OPERATION = "hdf"
 
 def launch_test(
     how_many_samples: int,
-    how_many_workers: int
+    how_many_mappers: int,
+    max_samples_per_mapper: int,
+    faas_environment: RemoteMapperEnvironment
 ) -> Dict:
     """
     A function that runs a given test case.
@@ -30,7 +32,9 @@ def launch_test(
 
     Args:
         how_many_samples (int): number of samples that should be generated
-        how_many_workers (int): number of workers that should be used for samples generation
+        how_many_mappers (int): number of workers that should be used for samples generation
+        max_samples_per_mapper (int): 
+        faas_environment (RemoteMapperEnvironment): "whisk" if HPCWHisk should be used, "aws" if AWS Lambda should be used
 
     Returns:
         Dict: a dictionary with metrics gathered within the test
@@ -40,31 +44,18 @@ def launch_test(
     metrics = {}
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
+    launch_mapper = resolve_mapper(faas_environment)
     
     # mapping
-    mapper_filesystem_results, map_time, worker_times = launch_remote_mapper(how_many_samples, how_many_workers, INPUT_FILES_DIR, TEMPORARY_RESULTS, SHOULD_MAPPER_PRODUCE_HDF)  
-    separate_results(mapper_filesystem_results.get_directory(), TEMPORARY_RESULTS)
-   
-    # reducing
-    cumulative_reduce_time = 0
-    for subdir in glob.glob(f"{TEMPORARY_RESULTS}/*"):
-        _directory_path, just_file_name = os.path.split(subdir)
-        output_file_name = f"{just_file_name}.h5"
-        reducer_function = functools.partial(
-            launch_reducer,
-            input_files=FilesystemHDF(subdir),
-            output_file_name=output_file_name
-        )
-        reducer_result, reduce_time = meassure_time(lambda: execute_concurrently(reducer_function, 1))
-        cumulative_reduce_time += reduce_time
-        if subdir.endswith("/z_profile"):
-            metrics["hdf_results"] = reducer_result[0].to_memory().read("z_profile.h5")
-        reducer_result[0].to_filesystem(FINAL_RESULTS)
+    mapper_filesystem_results, map_time, workers_times = launch_mapper(how_many_samples, how_many_mappers, INPUT_FILES_DIR, TEMPORARY_RESULTS, SHOULD_MAPPER_PRODUCE_HDF)  
     
+    # reducing
+    _reducer_result, cumulative_reduce_time, hdf_sample = launch_reducer(mapper_filesystem_results, FINAL_RESULTS)
     # update metrics
+    metrics["hdf_results"] = hdf_sample
     metrics["reduce_time"] = cumulative_reduce_time
     metrics["map_time"] = map_time
-    metrics["worker_times"] = worker_times
+    metrics["workers_times"] = workers_times
     
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)

@@ -5,12 +5,13 @@ import shutil
 import numpy as np
 import os
 
-METRICS_RESULT_PATH = "metrics/results/aws_test5.dump"
-
+METRICS_RESULT_PATH = "metrics/results/just_test.dump"
+FAAS_ENVIRONMENT = "whisk"
 HOW_MANY_TRIES = 1
 
 TEST_CASES = [
-    {"number_of_workers": 1, "number_of_samples": 1000},
+    {"number_of_workers": 10, "number_of_samples": 1000},
+    {"number_of_workers": 20, "number_of_samples": 1000},
     # {"number_of_workers": 150, "number_of_samples": 1000000},
     # {"number_of_workers": 200, "number_of_samples": 1000000},
     # {"number_of_workers": 250, "number_of_samples": 1000000},
@@ -27,7 +28,7 @@ TEST_CASES = [
     # {"number_of_workers": 15, "number_of_samples": 10000},
     # {"number_of_workers": 16, "number_of_samples": 10000},
     # {"number_of_workers": 17, "number_of_samples": 10000},
-    # {"number_of_workers": 18, "number_of_samples": 10000}, 
+    # {"number_of_workers": 18, "number_of_samples": 10000},
     # {"number_of_workers": 19, "number_of_samples": 10000},
     # {"number_of_workers": 20, "number_of_samples": 10000},
     # {"number_of_workers": 21, "number_of_samples": 10000},
@@ -41,7 +42,7 @@ TEST_CASES = [
     # {"number_of_workers": 80, "number_of_samples": 10000},
     # {"number_of_workers": 100, "number_of_samples": 10000},
 ]
-#TEST_CASES.reverse()
+# TEST_CASES.reverse()
 
 if __name__ == "__main__":
     test_results = []
@@ -50,7 +51,9 @@ if __name__ == "__main__":
             metrics, duration = meassure_time(
                 lambda: launch_test(
                     how_many_samples=test_case_params["number_of_samples"],
-                    how_many_workers=test_case_params["number_of_workers"]
+                    how_many_mappers=test_case_params["number_of_workers"],
+                    max_samples_per_mapper=1000,
+                    faas_environment=FAAS_ENVIRONMENT
                 )
             )
             metrics["total_duration"] = duration
@@ -62,7 +65,7 @@ if __name__ == "__main__":
                 "metrics": metrics,
                 "test_run_number": try_number
             }
-            
+
             test_results.append(test_instance)
 
     with open(METRICS_RESULT_PATH, "wb") as output_file:
