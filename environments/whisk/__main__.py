@@ -1,5 +1,5 @@
 import json
-from mapper import simulation
+from environment_common import simulation
 import time
 import subprocess
 
