@@ -10,7 +10,7 @@ PLOT_FILE = "TIME.png"
 # results_std = results.groupby("params.number_of_workers").std(
 #     ["results.map_time", "results.reduce_time", "results.total_duration"]
 # )
-    
+
 
 def load(input_file_path):
     with open(input_file_path, "rb") as input_file:
@@ -24,17 +24,33 @@ def plot(results):
         columns=["metrics.workers_times", "params.number_of_samples", "test_run_number"]
     )
 
-    
-    results_avg = results.groupby("params.number_of_workers").mean(
-        ["metrics.map_time", "metrics.reduce_time", "metrics.total_duration"]
-    ).reset_index()
+    results_avg = (
+        results.groupby("params.number_of_workers")
+        .mean(["metrics.map_time", "metrics.reduce_time", "metrics.total_duration"])
+        .reset_index()
+    )
 
     results_std = results.groupby("params.number_of_workers").std().fillna(0)
 
     x = results_avg["params.number_of_workers"]
-    plt.errorbar(x, results_avg["metrics.map_time"], results_std["metrics.map_time"], label="Map time")
-    plt.errorbar(x, results_avg["metrics.reduce_time"], results_std["metrics.reduce_time"], label="Reduce time")
-    plt.errorbar(x, results_avg["metrics.total_duration"], results_std["metrics.total_duration"], label="Full time")
+    plt.errorbar(
+        x,
+        results_avg["metrics.map_time"],
+        results_std["metrics.map_time"],
+        label="Map time",
+    )
+    plt.errorbar(
+        x,
+        results_avg["metrics.reduce_time"],
+        results_std["metrics.reduce_time"],
+        label="Reduce time",
+    )
+    plt.errorbar(
+        x,
+        results_avg["metrics.total_duration"],
+        results_std["metrics.total_duration"],
+        label="Full time",
+    )
     plt.legend()
     plt.xlabel("Number of workers")
     plt.ylabel("Time [s]")

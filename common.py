@@ -55,10 +55,11 @@ def execute_concurrently(function, N):
 def load_hdf_result_file(file_path):
     import h5py
     import numpy as np
+
     if not os.path.isfile(file_path):
         return None
-    f = h5py.File(file_path, 'r')
-    return np.array(f['data'])
+    f = h5py.File(file_path, "r")
+    return np.array(f["data"])
 
 
 def separate_results(input_dir, output_dir):
@@ -78,10 +79,9 @@ def serialize(list_of_filenames):
 
 def deserialize(files_map, directory):
     return Converters.map_to_files(
-        files_map,
-        directory,
-        lzma.decompress,
-        SHOULD_USE_MEMFD)
+        files_map, directory, lzma.decompress, SHOULD_USE_MEMFD
+    )
+
 
 def mktemp():
     return subprocess.check_output(["mktemp", "-d"]).decode()[:-1]

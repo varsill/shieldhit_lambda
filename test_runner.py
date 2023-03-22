@@ -1,4 +1,4 @@
-from launchers.remote_mapper_local_hdf_reducer import launch_test
+from launchers.remote_mapper_local_bdo_reducer import launch_test
 from common import meassure_time
 import pickle
 import shutil
@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 METRICS_RESULT_PATH = "metrics/results/just_test.dump"
-FAAS_ENVIRONMENT = "whisk"
+FAAS_ENVIRONMENT = "aws"
 HOW_MANY_TRIES = 1
 
 TEST_CASES = [
@@ -53,7 +53,7 @@ if __name__ == "__main__":
                     how_many_samples=test_case_params["number_of_samples"],
                     how_many_mappers=test_case_params["number_of_workers"],
                     max_samples_per_mapper=1000,
-                    faas_environment=FAAS_ENVIRONMENT
+                    faas_environment=FAAS_ENVIRONMENT,
                 )
             )
             metrics["total_duration"] = duration
@@ -63,7 +63,7 @@ if __name__ == "__main__":
             test_instance = {
                 "params": test_case_params,
                 "metrics": metrics,
-                "test_run_number": try_number
+                "test_run_number": try_number,
             }
 
             test_results.append(test_instance)

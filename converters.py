@@ -72,7 +72,7 @@ class Converters:
         input_map: Dict[str, str],
         output_directory: str,
         transform: Callable[[bytes], bytes] = _id,
-        memfd: bool = False
+        memfd: bool = False,
     ) -> None:
         """
         A function that takes a dictionary created with files_to_map() method and converts it back into the files out of which the
@@ -92,7 +92,9 @@ class Converters:
             decoded = base64.b64decode(content)
             transformed = transform(decoded)
             if not memfd:
-                with open(f"{output_directory}/{result_file_name}", "wb") as result_file:
+                with open(
+                    f"{output_directory}/{result_file_name}", "wb"
+                ) as result_file:
                     result_file.write(transformed)
             else:
                 pid = os.getpid()
@@ -100,9 +102,7 @@ class Converters:
                 memfd_path = f"/proc/{pid}/fd/{fd}"
                 with open(memfd_path, "wb") as result_file:
                     result_file.write(transformed)
-                os.symlink(
-                    memfd_path,
-                    f"{output_directory}/{result_file_name}")
+                os.symlink(memfd_path, f"{output_directory}/{result_file_name}")
 
     @staticmethod
     def json_file_to_files(
