@@ -5,8 +5,8 @@ cp binaries/convertmc.py shieldhit_deploy/convertmc
 cp binaries/shieldhit shieldhit_deploy/
 cp converters.py shieldhit_deploy/
 cp common.py shieldhit_deploy/ 
-cp workers/whisk_mapper/__main__.py shieldhit_deploy/
-cp workers/common/mapper.py shieldhit_deploy/
+cp environments/whisk/__main__.py shieldhit_deploy/
+cp environments/common/mapper.py shieldhit_deploy/
 cp z_profile_0000.bdo shieldhit_deploy/
 
 python3 -m pip install \
