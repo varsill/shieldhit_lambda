@@ -18,7 +18,7 @@ def send_request_to_remote_mapper(worker_id, how_many_samples, files, lambda_url
     action = "map_and_reduce"
   else:
     action = "map"
-  json_input = {"action": action, "n": how_many_samples, "N": worker_id, "files": files}
+  json_input = {"action": action, "n": how_many_samples, "N": worker_id, "files": files.read_all()}
   response, request_time = meassure_time( lambda: requests.post(lambda_url, json=json_input, verify=False))
 
   if response.status_code != 200:
@@ -31,18 +31,17 @@ def send_request_to_remote_mapper(worker_id, how_many_samples, files, lambda_url
       "worker_id": worker_id,
       "simulation_time": response.json()["time"],
       "request_time": request_time,
-      "files": response.json()["files"]
+      "files": InMemoryBinary(response.json()["files"], lzma.decompress)
   }
   return result
 
 
-def launch_multiple_remote_mappers(how_many_samples: int, how_many_workers: int, input_files_dir: str, temporary_results: str, should_mapper_produce_hdf: bool, launch_mapper):  
+def launch_multiple_remote_mappers(how_many_samples: int, how_many_workers: int, dat_files: InMemoryBinary, should_mapper_produce_hdf: bool, launch_mapper):  
   samples_per_worker = int(how_many_samples / how_many_workers)
-  dat_files_map = FilesystemBinary(input_files_dir, transform=lzma.compress).to_memory().read_all()
   mapper_function = functools.partial(
       launch_mapper,
       how_many_samples=samples_per_worker,
-      files_map=dat_files_map,
+      files=dat_files,
       should_produce_hdf=should_mapper_produce_hdf
   )
   
@@ -52,17 +51,12 @@ def launch_multiple_remote_mappers(how_many_samples: int, how_many_workers: int,
   
   workers_times = []
 
+  in_memory_data_to_return = InMemoryBinary({}, lzma.decompress)
   for r in successfull_mapper_results:
-      InMemoryBinary(r["files"], lzma.decompress).to_filesystem(temporary_results)
+      in_memory_data_to_return.merge(r["files"])
       del r["files"]
       workers_times.append(r)
-
-  if should_mapper_produce_hdf:
-    return_filesystem = FilesystemHDF
-  else:
-    return_filesystem = FilesystemBinary
-  
-  return return_filesystem(temporary_results), map_time, workers_times
+  return in_memory_data_to_return, map_time, workers_times
 
 
 def resolve_remote_mapper(faas_environment: RemoteMapperEnvironment):

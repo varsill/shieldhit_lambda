@@ -19,6 +19,11 @@ class FilesystemBinary:
 
     def get_directory(self):
         return self.directory
+    
+    def to_hdf(self):
+        if self.transform != id:
+            raise "Cannot perform transition from FilesystemBinary to FilesystemHDF since the transform is not id!"
+        return FilesystemHDF(self.directory, self.files_pattern)
 
 
 @dataclass
@@ -38,3 +43,6 @@ class FilesystemHDF:
 
     def get_directory(self):
         return self.directory
+    
+    def to_binary(self):
+        return FilesystemBinary(self.directory, self.files_pattern, id)

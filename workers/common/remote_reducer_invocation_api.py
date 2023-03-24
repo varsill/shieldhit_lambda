@@ -11,8 +11,8 @@ import functools
 
 RemoteReducerEnvironment = NewType("RemoteReducerEnvironment", str)
 
-def send_request_to_remote_reducer(files_map, operation, lambda_url):
-  json_input = {"action": "reduce", "files": files_map, "operation": operation}
+def send_request_to_remote_reducer(files, operation, lambda_url):
+  json_input = {"action": "reduce", "files": files.read_all(), "operation": operation}
   response, request_time = meassure_time( lambda: requests.post(lambda_url, json=json_input, verify=False))
 
   if response.status_code != 200:
@@ -24,7 +24,7 @@ def send_request_to_remote_reducer(files_map, operation, lambda_url):
       "status": "OK",
       "simulation_time": response.json()["time"],
       "request_time": request_time,
-      "files": response.json()["files"]
+      "files": InMemoryBinary(response.json()["files"], transform=lzma.decompress)
   }
   return result
 

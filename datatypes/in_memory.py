@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from converters import Converters
 import glob
 from typing import Dict, Any
+from common import mktemp
 
 import h5py
 
@@ -10,10 +11,10 @@ class InMemoryBinary:
     files_map: Dict
     transform: Any = None
 
-    def to_filesystem(self, output_dir):
+    def to_filesystem(self, output_dir, use_memfd=False):
         from datatypes.filesystem import FilesystemBinary
 
-        Converters.map_to_files(self.files_map, output_dir, self.transform)
+        Converters.map_to_files(self.files_map, output_dir, self.transform, use_memfd)
         return FilesystemBinary(output_dir)
 
     def read(self, filename):
@@ -21,6 +22,17 @@ class InMemoryBinary:
 
     def read_all(self):
         return self.files_map
+
+    def merge(self, other):
+        if isinstance(other, dict):
+            self.files_map = {**self.files_map, **other}
+        else:
+            self.files_map = {**self.files_map, **other.files_map}
+
+    def to_hdf(self):
+        tmdir = mktemp()
+        return self.to_filesystem(tmdir, use_memfd=False).to_hdf().to_memory()
+
 
 
 @dataclass
@@ -41,3 +53,10 @@ class InMemoryHDF:
 
     def read_all(self):
         return self.files_map
+    
+    
+    def merge(self, other):
+        if isinstance(other, dict):
+            self.files_map = {**self.files_map, **other}
+        else:
+            self.files_map = {**self.files_map, **other.files_map}

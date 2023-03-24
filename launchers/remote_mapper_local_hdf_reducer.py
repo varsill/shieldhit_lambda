@@ -7,7 +7,7 @@ from common import (
     separate_results,
 )
 from workers.aws_mapper import launch_worker as launch_mapper
-from workers.local_hdf_reducer import launch_worker as launch_reducer
+from workers.local_hdf_reducer import launch_worker as launch_local_hdf_reducer
 from typing import Dict
 import h5py
 import lzma
@@ -56,20 +56,21 @@ def launch_test(
     launch_mapper = resolve_remote_mapper(faas_environment)
 
     # mapping
-    mapper_filesystem_results, map_time, workers_times = launch_mapper(
+    dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
+    in_memory_mapper_results, map_time, workers_times = launch_mapper(
         how_many_samples,
         how_many_mappers,
-        INPUT_FILES_DIR,
-        TEMPORARY_RESULTS,
+        dat_files,
         SHOULD_MAPPER_PRODUCE_HDF,
     )
-
+    mapper_filesystem_hdf_results = in_memory_mapper_results.to_filesystem(TEMPORARY_RESULTS).to_hdf()
     # reducing
-    _reducer_result, cumulative_reduce_time, hdf_sample = launch_reducer(
-        mapper_filesystem_results, FINAL_RESULTS
+    reducer_in_memory_results, cumulative_reduce_time = launch_local_hdf_reducer(
+        mapper_filesystem_hdf_results
     )
+    reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
     # update metrics
-    metrics["hdf_results"] = hdf_sample
+    metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")
     metrics["reduce_time"] = cumulative_reduce_time
     metrics["map_time"] = map_time
     metrics["workers_times"] = workers_times

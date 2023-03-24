@@ -1,8 +1,8 @@
 import os
-
+from datatypes.in_memory import InMemoryBinary
 
 def launch_single_worker(
-    worker_id: int, how_many_samples: int, files_map, should_produce_hdf: bool
+    worker_id: int, how_many_samples: int, files: InMemoryBinary, should_produce_hdf: bool
 ):
     from workers.common.remote_mapper_invocation_api import (
         send_request_to_remote_mapper,
@@ -12,7 +12,7 @@ def launch_single_worker(
         return send_request_to_remote_mapper(
             worker_id,
             how_many_samples,
-            files_map,
+            files,
         os.getenv("AWS_LAMBDA_URL"),
             should_produce_hdf,
         )
@@ -24,8 +24,7 @@ def launch_single_worker(
 def launch_worker(
     how_many_samples: int,
     how_many_workers: int,
-    input_files_dir: str,
-    temporary_results: str,
+    input_files: InMemoryBinary,
     should_mapper_produce_hdf: bool,
 ):
     from workers.common.remote_mapper_invocation_api import (
@@ -35,8 +34,7 @@ def launch_worker(
     return launch_multiple_remote_mappers(
         how_many_samples,
         how_many_workers,
-        input_files_dir,
-        temporary_results,
+        input_files,
         should_mapper_produce_hdf,
         launch_single_worker,
     )

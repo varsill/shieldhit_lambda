@@ -59,20 +59,20 @@ def launch_test(
     launch_reducer = resolve_remote_reducer(faas_environment)
 
     # mapping
-    mapper_filesystem_results, map_time, workers_times = launch_mapper(
+    dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
+    in_memory_mapper_results, map_time, workers_times = launch_mapper(
         how_many_samples,
         how_many_mappers,
-        INPUT_FILES_DIR,
-        TEMPORARY_RESULTS,
+        dat_files,
         SHOULD_MAPPER_PRODUCE_HDF,
     )
-    mapper_filesystem_results = FilesystemBinary(mapper_filesystem_results.get_directory(), transform=lzma.compress) 
     # reducing
-    _reducer_result, cumulative_reduce_time, hdf_sample = launch_reducer(
-        mapper_filesystem_results.to_memory().read_all(), FINAL_RESULTS, "hdf"
+    reducer_in_memory_results, cumulative_reduce_time = launch_reducer(
+        in_memory_mapper_results, "hdf"
     )
+    reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
     # update metrics
-    metrics["hdf_results"] = hdf_sample
+    metrics["hdf_results"] = reducer_in_memory_results.read("z_profile_.h5")
     metrics["reduce_time"] = cumulative_reduce_time
     metrics["map_time"] = map_time
     metrics["workers_times"] = workers_times
