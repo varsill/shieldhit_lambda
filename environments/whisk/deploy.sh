@@ -7,7 +7,6 @@ cp converters.py shieldhit_deploy/
 cp common.py shieldhit_deploy/ 
 cp environments/whisk/__main__.py shieldhit_deploy/
 cp environments/environment_common.py shieldhit_deploy/
-cp z_profile_0000.bdo shieldhit_deploy/
 
 python3 -m pip install \
     --platform manylinux2014_x86_64 \

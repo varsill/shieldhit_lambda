@@ -1,12 +1,12 @@
 import json
-from environment_common import simulation
+from environment_common import execute
 import time
 import subprocess
 
 def main(event):
     try:
         start_time = time.time()
-        result = simulation(event)
+        result = execute(event)
         end_time = time.time()
     except Exception as e:
         return {"statusCode": 500, "body": str(e)}

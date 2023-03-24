@@ -19,7 +19,7 @@ from datatypes.filesystem import FilesystemBinary, FilesystemHDF
 import lzma
 from workers.common.remote_mapper_invocation_api import (
     RemoteMapperEnvironment,
-    resolve_mapper,
+    resolve_remote_mapper,
 )
 
 INPUT_FILES_DIR = "input/"
@@ -53,7 +53,7 @@ def launch_test(
     metrics = {}
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
-    launch_mapper = resolve_mapper(faas_environment)
+    launch_mapper = resolve_remote_mapper(faas_environment)
 
     # mapping
     mapper_filesystem_results, map_time, workers_times = launch_mapper(

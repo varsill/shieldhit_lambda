@@ -14,11 +14,15 @@ from common import meassure_time
 from converters import Converters
 import glob
 from datatypes.filesystem import FilesystemBinary
-from workers.local_bdo_reducer import launch_worker as launch_reducer
 from workers.common.remote_mapper_invocation_api import (
     RemoteMapperEnvironment,
     resolve_remote_mapper,
 )
+from workers.common.remote_reducer_invocation_api import (
+    RemoteReducerEnvironment,
+    resolve_remote_reducer,
+)
+
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
@@ -52,6 +56,7 @@ def launch_test(
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
     launch_mapper = resolve_remote_mapper(faas_environment)
+    launch_reducer = resolve_remote_reducer(faas_environment)
 
     # mapping
     mapper_filesystem_results, map_time, workers_times = launch_mapper(
@@ -61,10 +66,10 @@ def launch_test(
         TEMPORARY_RESULTS,
         SHOULD_MAPPER_PRODUCE_HDF,
     )
-
+    mapper_filesystem_results = FilesystemBinary(mapper_filesystem_results.get_directory(), lzma.compress) 
     # reducing
     _reducer_result, cumulative_reduce_time, hdf_sample = launch_reducer(
-        mapper_filesystem_results, FINAL_RESULTS, "hdf"
+        mapper_filesystem_results.to_memory().read_all(), FINAL_RESULTS, "hdf"
     )
     # update metrics
     metrics["hdf_results"] = hdf_sample

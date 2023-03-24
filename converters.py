@@ -3,8 +3,7 @@ import json
 import os
 from typing import List, Dict, Callable
 
-
-def _id(x):
+def id(x):
     return x
 
 
@@ -26,7 +25,7 @@ class Converters:
 
     @staticmethod
     def files_to_map(
-        input_filenames: List[str], transform: Callable[[bytes], bytes] = _id
+        input_filenames: List[str], transform: Callable[[bytes], bytes] = id
     ) -> Dict[str, str]:
         """
         A function that encodes a list of the files within a single dictionary.
@@ -51,7 +50,7 @@ class Converters:
     def files_to_json_file(
         input_filenames: List[str],
         output_path: str,
-        transform: Callable[[bytes], bytes] = _id,
+        transform: Callable[[bytes], bytes] = id,
     ) -> None:
         """
         A function that encodes a list of the files within a JSON file.
@@ -71,7 +70,7 @@ class Converters:
     def map_to_files(
         input_map: Dict[str, str],
         output_directory: str,
-        transform: Callable[[bytes], bytes] = _id,
+        transform: Callable[[bytes], bytes] = id,
         memfd: bool = False,
     ) -> None:
         """
@@ -108,7 +107,7 @@ class Converters:
     def json_file_to_files(
         input_path: str,
         output_directory: str,
-        transform: Callable[[bytes], bytes] = _id,
+        transform: Callable[[bytes], bytes] = id,
     ) -> None:
         """
         A function that converts the JSON with encoded files back into the original files.

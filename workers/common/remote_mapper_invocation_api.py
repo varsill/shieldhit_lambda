@@ -1,5 +1,5 @@
 import requests
-from common import meassure_time, deserialize, execute_concurrently
+from common import meassure_time, deserialize, execute_concurrently, serialize
 import os
 from datatypes.in_memory import InMemoryBinary
 import lzma
@@ -8,11 +8,16 @@ from workers.aws_mapper import launch_worker as launch_aws_mapper
 from workers.whisk_mapper import launch_worker as launch_whisk_mapper
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
 import functools
+import glob
 
 RemoteMapperEnvironment = NewType("RemoteMapperEnvironment", str)
 
 def send_request_to_remote_mapper(worker_id, how_many_samples, files, lambda_url, should_produce_hdf):
-  json_input = {"n": how_many_samples, "N": worker_id, "files": files, "should_produce_hdf": should_produce_hdf}
+  if should_produce_hdf:
+    action = "map_and_reduce"
+  else:
+    action = "map"
+  json_input = {"action": action, "n": how_many_samples, "N": worker_id, "files": files}
   response, request_time = meassure_time( lambda: requests.post(lambda_url, json=json_input, verify=False))
 
   if response.status_code != 200:
@@ -33,12 +38,11 @@ def send_request_to_remote_mapper(worker_id, how_many_samples, files, lambda_url
 def launch_multiple_remote_mappers(how_many_samples: int, how_many_workers: int, input_files_dir: str, temporary_results: str, should_mapper_produce_hdf: bool, launch_mapper):  
   samples_per_worker = int(how_many_samples / how_many_workers)
 
-
-  dat_files = FilesystemBinary(input_files_dir, transform=lzma.compress).to_memory().read_all()
+  dat_files_map = serialize(glob.glob(f"{input_files_dir}/*"))
   mapper_function = functools.partial(
       launch_mapper,
       how_many_samples=samples_per_worker,
-      files=dat_files,
+      files_map=dat_files_map,
       should_produce_hdf=should_mapper_produce_hdf
   )
   
@@ -61,7 +65,7 @@ def launch_multiple_remote_mappers(how_many_samples: int, how_many_workers: int,
   return return_filesystem(temporary_results), map_time, workers_times
 
 
-def resolve_mapper(faas_environment: RemoteMapperEnvironment):
+def resolve_remote_mapper(faas_environment: RemoteMapperEnvironment):
     if faas_environment == "whisk":
        return launch_whisk_mapper
     elif faas_environment=="aws": 

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from converters import Converters
+from converters import Converters, id
 import glob
 from common import load_hdf_result_file
 from typing import Any
@@ -9,7 +9,7 @@ import os
 @dataclass
 class FilesystemBinary:
     directory: str
-    transform: Any = None
+    transform: Any = id
 
     def to_memory(self):
         from datatypes.in_memory import InMemoryBinary

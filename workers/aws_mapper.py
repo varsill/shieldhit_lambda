@@ -2,7 +2,7 @@ import os
 
 
 def launch_single_worker(
-    worker_id: int, how_many_samples: int, files, should_produce_hdf: bool
+    worker_id: int, how_many_samples: int, files_map, should_produce_hdf: bool
 ):
     from workers.common.remote_mapper_invocation_api import (
         send_request_to_remote_mapper,
@@ -12,8 +12,8 @@ def launch_single_worker(
         return send_request_to_remote_mapper(
             worker_id,
             how_many_samples,
-            files,
-            os.getenv("AWS_LAMBDA_URL"),
+            files_map,
+        os.getenv("AWS_LAMBDA_URL"),
             should_produce_hdf,
         )
     except Exception as e:
