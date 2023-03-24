@@ -4,7 +4,7 @@ mkdir shieldhit_deploy
 cp binaries/convertmc.py shieldhit_deploy/convertmc
 cp binaries/shieldhit shieldhit_deploy/
 cp converters.py shieldhit_deploy/
-cp common.py shieldhit_deploy/ 
+cp common.py shieldhit_deploy/
 cp environments/whisk/__main__.py shieldhit_deploy/
 cp environments/environment_common.py shieldhit_deploy/
 

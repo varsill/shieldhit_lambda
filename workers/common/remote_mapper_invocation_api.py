@@ -1,5 +1,5 @@
 import requests
-from common import meassure_time, deserialize, execute_concurrently, serialize
+from common import meassure_time, execute_concurrently
 import os
 from datatypes.in_memory import InMemoryBinary
 import lzma
@@ -7,6 +7,7 @@ from typing import NewType
 from workers.aws_mapper import launch_worker as launch_aws_mapper
 from workers.whisk_mapper import launch_worker as launch_whisk_mapper
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
+from datatypes.in_memory import InMemoryBinary, InMemoryHDF
 import functools
 import glob
 
@@ -37,8 +38,7 @@ def send_request_to_remote_mapper(worker_id, how_many_samples, files, lambda_url
 
 def launch_multiple_remote_mappers(how_many_samples: int, how_many_workers: int, input_files_dir: str, temporary_results: str, should_mapper_produce_hdf: bool, launch_mapper):  
   samples_per_worker = int(how_many_samples / how_many_workers)
-
-  dat_files_map = serialize(glob.glob(f"{input_files_dir}/*"))
+  dat_files_map = FilesystemBinary(input_files_dir, transform=lzma.compress).to_memory().read_all()
   mapper_function = functools.partial(
       launch_mapper,
       how_many_samples=samples_per_worker,
@@ -53,7 +53,7 @@ def launch_multiple_remote_mappers(how_many_samples: int, how_many_workers: int,
   workers_times = []
 
   for r in successfull_mapper_results:
-      deserialize(r["files"], temporary_results)
+      InMemoryBinary(r["files"], lzma.decompress).to_filesystem(temporary_results)
       del r["files"]
       workers_times.append(r)
 

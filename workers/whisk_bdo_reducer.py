@@ -1,6 +1,7 @@
-from common import deserialize, meassure_time
+from common import meassure_time
 from datatypes.filesystem import FilesystemHDF
 import os
+import lzma
 
 def launch_worker(files_map, output_dir, operation):
     from workers.common.remote_reducer_invocation_api import (
@@ -12,7 +13,7 @@ def launch_worker(files_map, output_dir, operation):
         operation,
         os.getenv("WHISK_ACTION_URL")
     ))
-    deserialize(reducer_results["files"], output_dir)
-    reducer_results = FilesystemHDF(reducer_results)
+    InMemoryBinary(reducer_results["files"], lzma.decompress).to_filesystem(output_dir)
+    reducer_results = FilesystemHDF(output_dir)
     hdf_sample = reducer_results.to_memory().read("z_profile_.h5")
     return reducer_results, reduce_time, hdf_sample

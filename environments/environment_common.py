@@ -1,7 +1,9 @@
 import subprocess
 import glob
 import os
-from common import serialize, deserialize, mktemp
+from common import mktemp
+from converters import Converters
+import lzma
 
 def execute(event):
     action = event.get("action", "action not provided")
@@ -33,19 +35,18 @@ def mapper(n, N, files, should_produce_hdf):
     
     tmpdir = mktemp()
    
-    deserialize(files, tmpdir)
+    Converters.map_to_files(files, tmpdir, lzma.decompress)
      
     subprocess.check_output(["./shieldhit", "-n", str(n), "-N", str(N), tmpdir])
 
-    all_bdo_files = glob.glob(f"{tmpdir}/*.bdo")
-    
     if should_produce_hdf:
         subprocess.check_output(["./convertmc", "hdf", "--many", f"{tmpdir}/*.bdo", tmpdir])
         all_hdf_files = glob.glob(f"{tmpdir}/*.h5")
         all_hdf_files_with_changed_name = _rename_hdf_files(all_hdf_files, str(N))
-        result_map = serialize(all_hdf_files_with_changed_name)
+        result_map = Converters.files_to_map(all_hdf_files_with_changed_name, lzma.compress)
     else:
-        result_map = serialize(all_bdo_files)
+        all_bdo_files = glob.glob(f"{tmpdir}/*.bdo")
+        result_map = Converters.files_to_map(all_bdo_files, lzma.compress)
 
     subprocess.check_output(["rm", "-rf", tmpdir])
     return result_map
@@ -55,13 +56,11 @@ def reducer(files, operation):
         subprocess.check_output(["chmod", "a+x", "convertmc"])
     except Exception:
         pass
-
     tmpdir = mktemp()
-    deserialize(files, tmpdir)
+    Converters.map_to_files(files, tmpdir, lzma.decompress)
     subprocess.check_output(["./convertmc", operation, "--many", f"{tmpdir}/*.bdo", tmpdir])
     all_hdf_files = glob.glob(f"{tmpdir}/*.h5")
-    #all_hdf_files_with_changed_name = _rename_hdf_files(all_hdf_files)
-    result_map = serialize(all_hdf_files)
+    result_map = Converters.files_to_map(all_hdf_files, lzma.compress)
     return result_map
 
 def _rename_hdf_files(all_hdf_files, N=""):

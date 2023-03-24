@@ -72,16 +72,5 @@ def separate_results(input_dir, output_dir):
             os.remove(os.path.join(result_subdir, filename))
         shutil.move(filename, result_subdir)
 
-
-def serialize(list_of_filenames):
-    return Converters.files_to_map(list_of_filenames, lzma.compress)
-
-
-def deserialize(files_map, directory):
-    return Converters.map_to_files(
-        files_map, directory, lzma.decompress, SHOULD_USE_MEMFD
-    )
-
-
 def mktemp():
     return subprocess.check_output(["mktemp", "-d"]).decode()[:-1]

@@ -5,7 +5,6 @@ from typing import Dict, Any
 
 import h5py
 
-
 @dataclass
 class InMemoryBinary:
     files_map: Dict

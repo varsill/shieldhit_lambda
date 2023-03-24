@@ -66,7 +66,7 @@ def launch_test(
         TEMPORARY_RESULTS,
         SHOULD_MAPPER_PRODUCE_HDF,
     )
-    mapper_filesystem_results = FilesystemBinary(mapper_filesystem_results.get_directory(), lzma.compress) 
+    mapper_filesystem_results = FilesystemBinary(mapper_filesystem_results.get_directory(), transform=lzma.compress) 
     # reducing
     _reducer_result, cumulative_reduce_time, hdf_sample = launch_reducer(
         mapper_filesystem_results.to_memory().read_all(), FINAL_RESULTS, "hdf"
