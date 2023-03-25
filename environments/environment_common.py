@@ -59,7 +59,11 @@ def reducer(files, operation):
     tmpdir = mktemp()
     Converters.map_to_files(files, tmpdir, lzma.decompress)
     subprocess.check_output(["./convertmc", operation, "--many", f"{tmpdir}/*.bdo", tmpdir])
-    all_hdf_files = glob.glob(f"{tmpdir}/*.h5")
+    if operation == "image":
+        extension = ".png"
+    elif operation == "hdf":
+        extension = ".h5"
+    all_hdf_files = glob.glob(f"{tmpdir}/*{extension}")
     result_map = Converters.files_to_map(all_hdf_files, lzma.compress)
     return result_map
 

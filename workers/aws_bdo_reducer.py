@@ -14,5 +14,4 @@ def launch_worker(files: InMemoryBinary, operation: str):
         operation,
         os.getenv("AWS_LAMBDA_URL")
     ))
-    reducer_hdf_results = reducer_results["files"].to_hdf()
-    return reducer_hdf_results, reduce_time
+    return reducer_results["files"], reduce_time

@@ -14,5 +14,4 @@ def launch_worker(files, operation):
         operation,
         os.getenv("WHISK_ACTION_URL")
     ))
-    reducder_hdf_results = reducer_results["files"].to_hdf()
-    return reducder_hdf_results, reduce_time
+    return  reducer_results["files"], reduce_time

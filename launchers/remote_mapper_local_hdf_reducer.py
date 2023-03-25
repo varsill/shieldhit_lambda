@@ -21,6 +21,7 @@ from workers.common.remote_mapper_invocation_api import (
     RemoteMapperEnvironment,
     resolve_remote_mapper,
 )
+from launchers.common import prepare_multiple_remote_mappers_function
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
@@ -53,11 +54,11 @@ def launch_test(
     metrics = {}
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
-    launch_mapper = resolve_remote_mapper(faas_environment)
-
+    launch_single_mapper = resolve_remote_mapper(faas_environment)
+    launch_multiple_mappers = prepare_multiple_remote_mappers_function(launch_single_mapper)
     # mapping
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
-    in_memory_mapper_results, map_time, workers_times = launch_mapper(
+    in_memory_mapper_results, map_time, workers_times = launch_multiple_mappers(
         how_many_samples,
         how_many_mappers,
         dat_files,
