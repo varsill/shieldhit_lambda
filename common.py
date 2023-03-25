@@ -68,8 +68,8 @@ def separate_results(input_dir, output_dir):
         result_name, _, _worker_id = just_file_name.rpartition("_")
         result_subdir = f"{output_dir}/{result_name}"
         os.makedirs(result_subdir, exist_ok=True)
-        if os.path.exists(os.path.join(result_subdir, filename)):
-            os.remove(os.path.join(result_subdir, filename))
+        # if os.path.exists(os.path.join(result_subdir, filename)):
+        #     os.remove(os.path.join(result_subdir, filename))
         shutil.move(filename, result_subdir)
 
 def mktemp():

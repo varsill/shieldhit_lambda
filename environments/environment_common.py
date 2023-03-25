@@ -1,9 +1,12 @@
 import subprocess
 import glob
 import os
-from common import mktemp
+from common import mktemp, separate_results
 from converters import Converters
 import lzma
+import pickle
+import numpy as np
+#import h5py
 
 def execute(event):
     action = event.get("action", "action not provided")
@@ -17,10 +20,13 @@ def execute(event):
         N = event.get("N", 0)
         files = event["files"]
         return mapper(n, N, files, True)
-    elif action=="reduce":
+    elif action=="bdo_reduce":
         files = event["files"]
         operation = event["operation"]
-        return reducer(files, operation)
+        return bdo_reducer(files, operation)
+    elif action=="numpy_reduce":
+        files = event["files"]
+        return numpy_reducer(files)
     else:
         raise Exception(f"Unknown action: {action}")
     
@@ -51,7 +57,7 @@ def mapper(n, N, files, should_produce_hdf):
     subprocess.check_output(["rm", "-rf", tmpdir])
     return result_map
 
-def reducer(files, operation):
+def bdo_reducer(files, operation):
     try:
         subprocess.check_output(["chmod", "a+x", "convertmc"])
     except Exception:
@@ -66,6 +72,31 @@ def reducer(files, operation):
     all_hdf_files = glob.glob(f"{tmpdir}/*{extension}")
     result_map = Converters.files_to_map(all_hdf_files, lzma.compress)
     return result_map
+
+def numpy_reducer(input_files):
+    tmpdir = mktemp()
+    Converters.map_to_files(input_files, tmpdir, lzma.decompress)
+    separate_results(tmpdir, tmpdir)
+    for subdir in glob.glob(f"{tmpdir}/*"):
+        _directory_path, just_file_name = os.path.split(subdir)
+        output_file_name = f"{just_file_name}.h5"
+        reducer_result = _calculate_mean(, output_file_name)
+        Converters.map_to_files(reducer_result, tmpdir)
+    
+    all_hdf_files = glob.glob(f"{tmpdir}/*.h5")
+    result_map = Converters.files_to_map(all_hdf_files, lzma.compress)
+    return result_map
+
+
+def _calculate_mean(hdf_files_map, output_file_name):
+    filenames = list(hdf_files_map.keys())
+    head, *tail = filenames
+    cumulative = hdf_files_map[head]
+
+    for filename in tail:
+        cumulative = cumulative + hdf_files_map[filename]
+
+    return {output_file_name: cumulative / len(filenames)}
 
 def _rename_hdf_files(all_hdf_files, N=""):
     all_hdf_files_with_changed_name = []

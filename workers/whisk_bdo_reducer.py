@@ -6,11 +6,11 @@ import lzma
 
 def launch_worker(files, operation):
     from workers.common.remote_reducer_invocation_api import (
-        send_request_to_remote_reducer
+        send_request_to_remote_bdo_reducer
     )
 
-    reducer_results, reduce_time = meassure_time(lambda: send_request_to_remote_reducer(
-        files.read_all(),
+    reducer_results, reduce_time = meassure_time(lambda: send_request_to_remote_bdo_reducer(
+        files,
         operation,
         os.getenv("WHISK_ACTION_URL")
     ))

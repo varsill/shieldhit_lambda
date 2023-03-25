@@ -27,8 +27,7 @@ from launchers.common import prepare_multiple_remote_mappers_function
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
-SHOULD_MAPPER_PRODUCE_HDF = False
-OPERATION = "hdf"
+SHOULD_MAPPER_PRODUCE_HDF = True
 
 
 def launch_test(
@@ -57,7 +56,7 @@ def launch_test(
     os.makedirs(FINAL_RESULTS, exist_ok=True)
     launch_single_mapper = resolve_remote_mapper(faas_environment)
     launch_multiple_mappers = prepare_multiple_remote_mappers_function(launch_single_mapper)
-    launch_reducer = resolve_remote_reducer(faas_environment, "bdo")
+    launch_reducer = resolve_remote_reducer(faas_environment, "hdf")
 
     # mapping
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
@@ -69,7 +68,7 @@ def launch_test(
     )
     # reducing
     reducer_in_memory_results, cumulative_reduce_time = launch_reducer(
-        in_memory_mapper_results, OPERATION
+        in_memory_mapper_results
     )
    
     reducer_in_memory_results.to_filesystem(FINAL_RESULTS)

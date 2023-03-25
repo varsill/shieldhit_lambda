@@ -10,7 +10,7 @@ FAAS_ENVIRONMENT = "aws"
 HOW_MANY_TRIES = 1
 
 TEST_CASES = [
-    {"number_of_workers": 10, "number_of_samples": 1000},
+    {"number_of_workers": 2, "number_of_samples": 100},
     #{"number_of_workers": 20, "number_of_samples": 1000},
     # {"number_of_workers": 150, "number_of_samples": 1000000},
     # {"number_of_workers": 200, "number_of_samples": 1000000},
