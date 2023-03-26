@@ -5,13 +5,14 @@ import os
 import lzma
 
 
-def launch_worker(files: InMemoryBinary, operation: str):
+def launch_worker(files: InMemoryBinary, operation: str, worker_id: str = ""):
     from workers.common.remote_reducer_invocation_api import (
         send_request_to_remote_reducer
     )
     reducer_results, reduce_time = meassure_time(lambda: send_request_to_remote_reducer(
         files,
         operation,
-        os.getenv("AWS_LAMBDA_URL")
+        os.getenv("AWS_LAMBDA_URL"),
+        worker_id
     ))
     return reducer_results["files"], reduce_time

@@ -20,7 +20,8 @@ def execute(event):
     elif action=="reduce":
         files = event["files"]
         operation = event["operation"]
-        return reducer(files, operation)
+        worker_id = event["N"]
+        return reducer(files, operation, worker_id)
     else:
         raise Exception(f"Unknown action: {action}")
     
@@ -51,7 +52,7 @@ def mapper(n, N, files, should_produce_hdf):
     subprocess.check_output(["rm", "-rf", tmpdir])
     return result_map
 
-def reducer(files, operation):
+def reducer(files, operation, N):
     try:
         subprocess.check_output(["chmod", "a+x", "convertmc"])
     except Exception:
@@ -64,7 +65,8 @@ def reducer(files, operation):
     elif operation == "hdf":
         extension = ".h5"
     all_hdf_files = glob.glob(f"{tmpdir}/*{extension}")
-    result_map = Converters.files_to_map(all_hdf_files, lzma.compress)
+    all_hdf_files_with_changed_name = _rename_hdf_files(all_hdf_files, N)
+    result_map = Converters.files_to_map(all_hdf_files_with_changed_name, lzma.compress)
     return result_map
 
 def _rename_hdf_files(all_hdf_files, N=""):

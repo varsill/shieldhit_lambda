@@ -1,4 +1,4 @@
-from launchers.remote_mapper_remote_bdo_reducer import launch_test
+from launchers.remote_mapper_remote_partial_bdo_reducer_local_hdf_reducer import launch_test
 from common import meassure_time
 import pickle
 import shutil
@@ -10,7 +10,7 @@ FAAS_ENVIRONMENT = "aws"
 HOW_MANY_TRIES = 1
 
 TEST_CASES = [
-    {"number_of_workers": 10, "number_of_samples": 1000},
+    {"number_of_workers": 20, "number_of_samples": 1000},
     #{"number_of_workers": 20, "number_of_samples": 1000},
     # {"number_of_workers": 150, "number_of_samples": 1000000},
     # {"number_of_workers": 200, "number_of_samples": 1000000},
