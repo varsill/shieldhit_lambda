@@ -61,6 +61,7 @@ def launch_test(
         how_many_mappers,
         dat_files,
         SHOULD_MAPPER_PRODUCE_HDF,
+        save_to="download"
     )
     mapper_filesystem_binary_results = in_memory_mapper_results.to_filesystem(TEMPORARY_RESULTS)
     # reducing

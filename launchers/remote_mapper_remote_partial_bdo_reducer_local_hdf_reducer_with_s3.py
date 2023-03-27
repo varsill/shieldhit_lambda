@@ -14,7 +14,7 @@ from common import meassure_time
 from converters import Converters
 import glob
 from datatypes.filesystem import FilesystemBinary
-from datatypes.in_memory import InMemoryHDF
+from datatypes.in_memory import InMemoryHDF, InMemoryBinary
 from workers.common.remote_mapper_invocation_api import (
     RemoteMapperEnvironment,
     resolve_remote_mapper,
@@ -27,6 +27,7 @@ from launchers.common import prepare_multiple_remote_mappers_function
 from workers.local_hdf_reducer import launch_worker as launch_local_hdf_reducer
 from multiprocessing import Pool, Lock
 import multiprocessing
+from multiprocessing import Manager
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
@@ -34,21 +35,25 @@ FINAL_RESULTS = "results/final"
 SHOULD_MAPPER_PRODUCE_HDF = False
 OPERATION = "hdf"
 REDUCE_WHEN = 5
+MAX_RESULT_FILENAME_LENGHT=100
 
-def mapper_and_bdo_reducer(worker_id, lock, launch_single_mapper, launch_reducer, how_many_samples, dat_files, should_produce_hdf, tmp_dir, reduce_when):
-    result = launch_single_mapper(worker_id, how_many_samples, dat_files, should_produce_hdf, save_to="download")
+def mapper_and_bdo_reducer(worker_id, lock, launch_single_mapper, launch_reducer, how_many_samples, dat_files, should_produce_hdf, results_map, tmp_dir, reduce_when):
+    result = launch_single_mapper(worker_id, how_many_samples, dat_files, should_produce_hdf, save_to="s3")
     number_of_files_produced_by_me = len(result["files"].read_all().keys())
     with lock:
-        result["files"].to_filesystem(tmp_dir)
-        number_of_files_in_tmpdir = len([name for name in os.listdir(tmp_dir) if os.path.isfile(os.path.join(tmp_dir, name))])
-        if int(number_of_files_in_tmpdir/number_of_files_produced_by_me) == reduce_when:
-            left_in_memory_mapper_results = FilesystemBinary(tmp_dir, "*", lzma.compress).to_memory()
-            for f in glob.glob(f"{tmp_dir}/*"):
-                os.remove(f)
+        if int(len(results_map.keys())/number_of_files_produced_by_me) == REDUCE_WHEN:
+            left_in_memory_results_map = {}
+            for key, value in results_map.items():
+                left_in_memory_results_map[key] = value
+            left_in_memory_mapper_results = InMemoryBinary(left_in_memory_results_map, transform=lzma.compress)
+            for key in results_map.keys():
+                del results_map[key]
         else:
+            for key, value in result["files"].read_all().items():
+                results_map[key] = value
             return {"type": "JUST_MAPPER", "map_time": result["request_time"], "simulation_time": result["simulation_time"]}
     reducer_in_memory_results, reduce_time = launch_reducer(
-        left_in_memory_mapper_results, "hdf", worker_id_prefix=str(worker_id), get_from="uploaded"
+        left_in_memory_mapper_results, "hdf", get_from="s3", worker_id_prefix=str(worker_id)
     )
     reducer_in_filesystem_results = reducer_in_memory_results.to_filesystem(tmp_dir)
     return {"type": "MAPPER_AND_REDUCER", "results": reducer_in_filesystem_results, "map_time": result["request_time"], "reduce_time": reduce_time, "simulation_time": result["simulation_time"]}
@@ -86,6 +91,10 @@ def launch_test(
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
     m = multiprocessing.Manager()
     lock = m.Lock()
+
+    #results_list = ShareableList(["x"*MAX_RESULT_FILENAME_LENGHT]*REDUCE_WHEN)
+    manager = Manager()
+    shared_results_map = manager.dict() 
     with Pool(processes=how_many_mappers) as pool:
         concurrent_function = functools.partial(
             mapper_and_bdo_reducer,
@@ -95,6 +104,7 @@ def launch_test(
             how_many_samples=how_many_samples_per_mapper,
             dat_files=dat_files,
             should_produce_hdf=SHOULD_MAPPER_PRODUCE_HDF,
+            results_map=shared_results_map,
             tmp_dir=TEMPORARY_RESULTS,
             reduce_when=REDUCE_WHEN
         )
@@ -109,6 +119,7 @@ def launch_test(
     reducer_in_memory_results, hdf_reduce_time = launch_local_hdf_reducer(
         mapper_and_reducer_in_filesystem_results
     )
+    reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
     workers_times = [r["simulation_time"] for r in results]
     # update metrics
     metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")

@@ -66,15 +66,16 @@ def launch_test(
         how_many_mappers,
         dat_files,
         SHOULD_MAPPER_PRODUCE_HDF,
+        save_to="download"
     )
     # reducing
     reducer_in_memory_results, cumulative_reduce_time = launch_reducer(
-        in_memory_mapper_results, OPERATION
+        in_memory_mapper_results, OPERATION, get_from="uploaded"
     )
    
     reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
     # update metrics
-    #metrics["hdf_results"] = reducer_in_memory_results.to_hdf().read("z_profile_.h5")
+    metrics["hdf_results"] = reducer_in_memory_results.to_hdf().read("z_profile_.h5")
     metrics["reduce_time"] = cumulative_reduce_time
     metrics["map_time"] = map_time
     metrics["workers_times"] = workers_times

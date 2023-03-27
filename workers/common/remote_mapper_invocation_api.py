@@ -13,12 +13,12 @@ import glob
 
 RemoteMapperEnvironment = NewType("RemoteMapperEnvironment", str)
 
-def send_request_to_remote_mapper(worker_id, how_many_samples, files, lambda_url, should_produce_hdf):
+def send_request_to_remote_mapper(worker_id, how_many_samples, files, lambda_url, should_produce_hdf, save_to):
   if should_produce_hdf:
     action = "map_and_reduce"
   else:
     action = "map"
-  json_input = {"action": action, "n": how_many_samples, "N": worker_id, "files": files.read_all()}
+  json_input = {"action": action, "n": how_many_samples, "N": worker_id, "files": files.read_all(), "save_to": save_to}
   response, request_time = meassure_time( lambda: requests.post(lambda_url, json=json_input, verify=False))
 
   if response.status_code != 200:
