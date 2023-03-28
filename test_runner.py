@@ -18,7 +18,7 @@ TEST_CASES = [
     {"number_of_workers": 1, "number_of_samples": 20000},
     {"number_of_workers": 1, "number_of_samples": 50000},
     {"number_of_workers": 1, "number_of_samples": 100000},
-    #{"number_of_workers": 20, "number_of_samples": 1000},
+    # {"number_of_workers": 20, "number_of_samples": 1000},
     # {"number_of_workers": 150, "number_of_samples": 1000000},
     # {"number_of_workers": 200, "number_of_samples": 1000000},
     # {"number_of_workers": 250, "number_of_samples": 1000000},
