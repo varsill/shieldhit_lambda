@@ -6,7 +6,7 @@ import numpy as np
 
 RESULTS_DUMP_FILE = "metrics/results/just_test.dump"
 PLOT_FILE = "DISTRIBUTION.png"
-
+GROUP_BY_PARAM = "number_of_samples"
 
 def __load_hdf(file_path):
     f = h5py.File(file_path, "r")
@@ -24,9 +24,9 @@ results_ref = __load_hdf("metrics/z_profile_ref.h5")
 results_dump = __load_dump(RESULTS_DUMP_FILE)
 
 results_dump = pd.json_normalize(results_dump).filter(
-    axis="columns", items=["metrics.hdf_results", "params.number_of_workers"]
+    axis="columns", items=["metrics.hdf_results", f"params.{GROUP_BY_PARAM}"]
 )
-
+print(results_dump)
 indices_to_replace = []
 for i, value in enumerate(np.array(results_dump["metrics.hdf_results"].values)):
     if value is None:
@@ -38,7 +38,7 @@ results_dump["metrics.hdf_results"].update(
 )
 
 results_dump_avg = (
-    results_dump.groupby("params.number_of_workers")
+    results_dump.groupby(f"params.{GROUP_BY_PARAM}")
     .agg(lambda x: np.average(x))
     .reset_index()
 )
@@ -50,7 +50,7 @@ for _index, value in results_dump_avg.iterrows():
     single_results = value["metrics.hdf_results"]
     mse = np.sum((single_results - results_ref) ** 2)
     mse_normalized = mse / np.sum(results_ref**2)
-    X.append(value["params.number_of_workers"])
+    X.append(value[f"params.{GROUP_BY_PARAM}"])
     Y.append(mse_normalized)
 
 plt.scatter(X, Y)

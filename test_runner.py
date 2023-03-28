@@ -1,4 +1,4 @@
-from launchers.remote_mapper_remote_partial_bdo_reducer_local_hdf_reducer_with_persistent_storage import launch_test
+from launchers.local_mapper_and_reducer import launch_test
 from common import meassure_time
 import pickle
 import shutil
@@ -10,7 +10,14 @@ FAAS_ENVIRONMENT = "whisk"
 HOW_MANY_TRIES = 1
 
 TEST_CASES = [
-    {"number_of_workers": 20, "number_of_samples": 1000},
+    {"number_of_workers": 1, "number_of_samples": 100},
+    {"number_of_workers": 1, "number_of_samples": 1000},
+    {"number_of_workers": 1, "number_of_samples": 2000},
+    {"number_of_workers": 1, "number_of_samples": 5000},
+    {"number_of_workers": 1, "number_of_samples": 10000},
+    {"number_of_workers": 1, "number_of_samples": 20000},
+    {"number_of_workers": 1, "number_of_samples": 50000},
+    {"number_of_workers": 1, "number_of_samples": 100000},
     #{"number_of_workers": 20, "number_of_samples": 1000},
     # {"number_of_workers": 150, "number_of_samples": 1000000},
     # {"number_of_workers": 200, "number_of_samples": 1000000},

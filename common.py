@@ -44,7 +44,7 @@ def meassure_time(f: Callable[[], T]) -> Tuple[T, float]:
 
 def execute_concurrently(function, N):
     if N == 1:
-        return [function()]
+        return [function(0)]
     else:
         with Pool(N) as process:
             results = process.map_async(function, range(N))
