@@ -35,23 +35,60 @@ SHOULD_MAPPER_PRODUCE_HDF = False
 OPERATION = "hdf"
 REDUCE_WHEN = 5
 
-def mapper_and_bdo_reducer(worker_id, lock, launch_single_mapper, launch_reducer, how_many_samples, dat_files, should_produce_hdf, tmp_dir, reduce_when):
-    result = launch_single_mapper(worker_id, how_many_samples, dat_files, should_produce_hdf, save_to="download")
+
+def mapper_and_bdo_reducer(
+    worker_id,
+    lock,
+    launch_single_mapper,
+    launch_reducer,
+    how_many_samples,
+    dat_files,
+    should_produce_hdf,
+    tmp_dir,
+    reduce_when,
+):
+    result = launch_single_mapper(
+        worker_id, how_many_samples, dat_files, should_produce_hdf, save_to="download"
+    )
     number_of_files_produced_by_me = len(result["files"].read_all().keys())
     with lock:
         result["files"].to_filesystem(tmp_dir)
-        number_of_files_in_tmpdir = len([name for name in os.listdir(tmp_dir) if os.path.isfile(os.path.join(tmp_dir, name))])
-        if int(number_of_files_in_tmpdir/number_of_files_produced_by_me) == reduce_when:
-            left_in_memory_mapper_results = FilesystemBinary(tmp_dir, "*", lzma.compress).to_memory()
+        number_of_files_in_tmpdir = len(
+            [
+                name
+                for name in os.listdir(tmp_dir)
+                if os.path.isfile(os.path.join(tmp_dir, name))
+            ]
+        )
+        if (
+            int(number_of_files_in_tmpdir / number_of_files_produced_by_me)
+            == reduce_when
+        ):
+            left_in_memory_mapper_results = FilesystemBinary(
+                tmp_dir, "*", lzma.compress
+            ).to_memory()
             for f in glob.glob(f"{tmp_dir}/*"):
                 os.remove(f)
         else:
-            return {"type": "JUST_MAPPER", "map_time": result["request_time"], "simulation_time": result["simulation_time"]}
+            return {
+                "type": "JUST_MAPPER",
+                "map_time": result["request_time"],
+                "simulation_time": result["simulation_time"],
+            }
     reducer_in_memory_results, reduce_time = launch_reducer(
-        left_in_memory_mapper_results, "hdf", worker_id_prefix=str(worker_id), get_from="uploaded"
+        left_in_memory_mapper_results,
+        "hdf",
+        worker_id_prefix=str(worker_id),
+        get_from="uploaded",
     )
     reducer_in_filesystem_results = reducer_in_memory_results.to_filesystem(tmp_dir)
-    return {"type": "MAPPER_AND_REDUCER", "results": reducer_in_filesystem_results, "map_time": result["request_time"], "reduce_time": reduce_time, "simulation_time": result["simulation_time"]}
+    return {
+        "type": "MAPPER_AND_REDUCER",
+        "results": reducer_in_filesystem_results,
+        "map_time": result["request_time"],
+        "reduce_time": reduce_time,
+        "simulation_time": result["simulation_time"],
+    }
 
 
 def launch_test(
@@ -80,8 +117,8 @@ def launch_test(
     os.makedirs(FINAL_RESULTS, exist_ok=True)
     launch_single_mapper = resolve_remote_mapper(faas_environment)
     launch_reducer = resolve_remote_reducer(faas_environment)
-    how_many_samples_per_mapper = int(how_many_samples/how_many_mappers)
-    
+    how_many_samples_per_mapper = int(how_many_samples / how_many_mappers)
+
     # mapping and partial reducing
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
     m = multiprocessing.Manager()
@@ -96,23 +133,27 @@ def launch_test(
             dat_files=dat_files,
             should_produce_hdf=SHOULD_MAPPER_PRODUCE_HDF,
             tmp_dir=TEMPORARY_RESULTS,
-            reduce_when=REDUCE_WHEN
+            reduce_when=REDUCE_WHEN,
         )
         results = pool.map_async(concurrent_function, range(how_many_mappers))
         results.wait()
-    
+
     results = results.get()
     map_time = sum([r["map_time"] for r in results])
-    bdo_reducer_times = sum(r["reduce_time"] for r in results if r["type"]=="MAPPER_AND_REDUCER")
-    mapper_and_reducer_in_filesystem_results = FilesystemBinary(TEMPORARY_RESULTS, "*.h5")
-    
+    bdo_reducer_times = sum(
+        r["reduce_time"] for r in results if r["type"] == "MAPPER_AND_REDUCER"
+    )
+    mapper_and_reducer_in_filesystem_results = FilesystemBinary(
+        TEMPORARY_RESULTS, "*.h5"
+    )
+
     reducer_in_memory_results, hdf_reduce_time = launch_local_hdf_reducer(
         mapper_and_reducer_in_filesystem_results
     )
     workers_times = [r["simulation_time"] for r in results]
     # update metrics
     metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")
-    metrics["reduce_time"] = bdo_reducer_times+hdf_reduce_time
+    metrics["reduce_time"] = bdo_reducer_times + hdf_reduce_time
     metrics["map_time"] = map_time
     metrics["workers_times"] = workers_times
 

@@ -18,7 +18,7 @@ def launch_worker(
             lambda: __launch_convertmc(subdir, output_dir, operation)
         )
         cumulative_reduce_time += reduce_time
-            
+
     return FilesystemHDF(output_dir), cumulative_reduce_time
 
 

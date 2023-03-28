@@ -8,6 +8,7 @@ RESULTS_DUMP_FILE = "metrics/results/just_test.dump"
 PLOT_FILE = "DISTRIBUTION.png"
 GROUP_BY_PARAM = "number_of_samples"
 
+
 def __load_hdf(file_path):
     f = h5py.File(file_path, "r")
     return np.array(f["data"])

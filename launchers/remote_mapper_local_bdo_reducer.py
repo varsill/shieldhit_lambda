@@ -53,7 +53,9 @@ def launch_test(
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
     launch_single_mapper = resolve_remote_mapper(faas_environment)
-    launch_multiple_mappers = prepare_multiple_remote_mappers_function(launch_single_mapper)
+    launch_multiple_mappers = prepare_multiple_remote_mappers_function(
+        launch_single_mapper
+    )
     # mapping
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
     in_memory_mapper_results, map_time, workers_times = launch_multiple_mappers(
@@ -61,9 +63,11 @@ def launch_test(
         how_many_mappers,
         dat_files,
         SHOULD_MAPPER_PRODUCE_HDF,
-        save_to="download"
+        save_to="download",
     )
-    mapper_filesystem_binary_results = in_memory_mapper_results.to_filesystem(TEMPORARY_RESULTS)
+    mapper_filesystem_binary_results = in_memory_mapper_results.to_filesystem(
+        TEMPORARY_RESULTS
+    )
     # reducing
     reducer_filesystem_result, cumulative_reduce_time = launch_local_bdo_reducer(
         mapper_filesystem_binary_results, FINAL_RESULTS, "hdf"

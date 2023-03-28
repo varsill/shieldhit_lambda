@@ -6,6 +6,7 @@ from common import mktemp
 
 import h5py
 
+
 @dataclass
 class InMemoryBinary:
     files_map: Dict
@@ -34,7 +35,6 @@ class InMemoryBinary:
         return self.to_filesystem(tmdir, use_memfd=False).to_hdf().to_memory()
 
 
-
 @dataclass
 class InMemoryHDF:
     files_map: Dict
@@ -53,8 +53,7 @@ class InMemoryHDF:
 
     def read_all(self):
         return self.files_map
-    
-    
+
     def merge(self, other):
         if isinstance(other, dict):
             self.files_map = {**self.files_map, **other}

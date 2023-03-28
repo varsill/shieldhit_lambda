@@ -36,6 +36,7 @@ SHOULD_MAPPER_PRODUCE_HDF = False
 REDUCE_WHEN = 5
 WHISK_VOLUME = "/net/people/plgrid/plgvarsill/persistent_volume"
 
+
 def resolve_persistent_storage(faas_environment):
     if faas_environment == "aws":
         return "s3", "s3"
@@ -44,26 +45,56 @@ def resolve_persistent_storage(faas_environment):
     else:
         raise Exception(f"Unknown FaaS environment: {faas_environment}")
 
-def mapper_and_bdo_reducer(worker_id, lock, launch_single_mapper, launch_reducer, how_many_samples, dat_files, should_produce_hdf, results_map, tmp_dir, save_to, get_from):
-    result = launch_single_mapper(worker_id, how_many_samples, dat_files, should_produce_hdf, save_to=save_to)
+
+def mapper_and_bdo_reducer(
+    worker_id,
+    lock,
+    launch_single_mapper,
+    launch_reducer,
+    how_many_samples,
+    dat_files,
+    should_produce_hdf,
+    results_map,
+    tmp_dir,
+    save_to,
+    get_from,
+):
+    result = launch_single_mapper(
+        worker_id, how_many_samples, dat_files, should_produce_hdf, save_to=save_to
+    )
     number_of_files_produced_by_me = len(result["files"].read_all().keys())
     with lock:
-        if int(len(results_map.keys())/number_of_files_produced_by_me) == REDUCE_WHEN:
+        if int(len(results_map.keys()) / number_of_files_produced_by_me) == REDUCE_WHEN:
             left_in_memory_results_map = {}
             for key, value in results_map.items():
                 left_in_memory_results_map[key] = value
-            left_in_memory_mapper_results = InMemoryBinary(left_in_memory_results_map, transform=lzma.compress)
+            left_in_memory_mapper_results = InMemoryBinary(
+                left_in_memory_results_map, transform=lzma.compress
+            )
             for key in results_map.keys():
                 del results_map[key]
         else:
             for key, value in result["files"].read_all().items():
                 results_map[key] = value
-            return {"type": "JUST_MAPPER", "map_time": result["request_time"], "simulation_time": result["simulation_time"]}
+            return {
+                "type": "JUST_MAPPER",
+                "map_time": result["request_time"],
+                "simulation_time": result["simulation_time"],
+            }
     reducer_in_memory_results, reduce_time = launch_reducer(
-        left_in_memory_mapper_results, "hdf", get_from=get_from, worker_id_prefix=str(worker_id)
+        left_in_memory_mapper_results,
+        "hdf",
+        get_from=get_from,
+        worker_id_prefix=str(worker_id),
     )
     reducer_in_filesystem_results = reducer_in_memory_results.to_filesystem(tmp_dir)
-    return {"type": "MAPPER_AND_REDUCER", "results": reducer_in_filesystem_results, "map_time": result["request_time"], "reduce_time": reduce_time, "simulation_time": result["simulation_time"]}
+    return {
+        "type": "MAPPER_AND_REDUCER",
+        "results": reducer_in_filesystem_results,
+        "map_time": result["request_time"],
+        "reduce_time": reduce_time,
+        "simulation_time": result["simulation_time"],
+    }
 
 
 def launch_test(
@@ -92,7 +123,7 @@ def launch_test(
     os.makedirs(FINAL_RESULTS, exist_ok=True)
     launch_single_mapper = resolve_remote_mapper(faas_environment)
     launch_reducer = resolve_remote_reducer(faas_environment)
-    how_many_samples_per_mapper = int(how_many_samples/how_many_mappers)
+    how_many_samples_per_mapper = int(how_many_samples / how_many_mappers)
     save_to, get_from = resolve_persistent_storage(faas_environment)
     # mapping and partial reducing
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
@@ -100,7 +131,7 @@ def launch_test(
     lock = m.Lock()
 
     manager = Manager()
-    shared_results_map = manager.dict() 
+    shared_results_map = manager.dict()
     with Pool(processes=how_many_mappers) as pool:
         concurrent_function = functools.partial(
             mapper_and_bdo_reducer,
@@ -111,18 +142,22 @@ def launch_test(
             dat_files=dat_files,
             should_produce_hdf=SHOULD_MAPPER_PRODUCE_HDF,
             results_map=shared_results_map,
-            tmp_dir=TEMPORARY_RESULTS, 
+            tmp_dir=TEMPORARY_RESULTS,
             save_to=save_to,
-            get_from=get_from
+            get_from=get_from,
         )
         results = pool.map_async(concurrent_function, range(how_many_mappers))
         results.wait()
-    
+
     results = results.get()
     map_time = sum([r["map_time"] for r in results])
-    bdo_reducer_times = sum(r["reduce_time"] for r in results if r["type"]=="MAPPER_AND_REDUCER")
-    mapper_and_reducer_in_filesystem_results = FilesystemBinary(TEMPORARY_RESULTS, "*.h5")
-    
+    bdo_reducer_times = sum(
+        r["reduce_time"] for r in results if r["type"] == "MAPPER_AND_REDUCER"
+    )
+    mapper_and_reducer_in_filesystem_results = FilesystemBinary(
+        TEMPORARY_RESULTS, "*.h5"
+    )
+
     reducer_in_memory_results, hdf_reduce_time = launch_local_hdf_reducer(
         mapper_and_reducer_in_filesystem_results
     )
@@ -130,7 +165,7 @@ def launch_test(
     workers_times = [r["simulation_time"] for r in results]
     # update metrics
     metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")
-    metrics["reduce_time"] = bdo_reducer_times+hdf_reduce_time
+    metrics["reduce_time"] = bdo_reducer_times + hdf_reduce_time
     metrics["map_time"] = map_time
     metrics["workers_times"] = workers_times
 

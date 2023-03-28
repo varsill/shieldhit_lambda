@@ -14,16 +14,18 @@ def launch_worker(input_files: FilesystemHDF):
 
     cumulative_result = InMemoryHDF({})
     cumulative_reduce_time = 0
-    
+
     for subdir in glob.glob(f"{tmpdir}/*"):
         _directory_path, just_file_name = os.path.split(subdir)
         output_file_name = f"{just_file_name}.h5"
         reducer_result, reduce_time = meassure_time(
-            lambda: __calculate_mean(FilesystemHDF(subdir).to_memory().read_all(), output_file_name)
+            lambda: __calculate_mean(
+                FilesystemHDF(subdir).to_memory().read_all(), output_file_name
+            )
         )
         cumulative_result.merge(reducer_result)
         cumulative_reduce_time += reduce_time
-       
+
     return cumulative_result, cumulative_reduce_time
 
 

@@ -20,9 +20,7 @@ def load(input_file_path):
 
 def plot(results):
     results = pd.json_normalize(results)
-    results = results.drop(
-        columns=["metrics.workers_times", "test_run_number"]
-    )
+    results = results.drop(columns=["metrics.workers_times", "test_run_number"])
 
     results_avg = (
         results.groupby(f"params.{GROUP_BY_PARAM}")

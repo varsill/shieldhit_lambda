@@ -9,17 +9,18 @@ import os
 @dataclass
 class FilesystemBinary:
     directory: str
-    files_pattern: str ="*"
+    files_pattern: str = "*"
     transform: Any = id
 
     def to_memory(self):
         from datatypes.in_memory import InMemoryBinary
+
         all_files = glob.glob(f"{self.directory}/{self.files_pattern}")
         return InMemoryBinary(Converters.files_to_map(all_files, self.transform))
 
     def get_directory(self):
         return self.directory
-    
+
     def to_hdf(self):
         if self.transform != id:
             raise "Cannot perform transition from FilesystemBinary to FilesystemHDF since the transform is not id!"
@@ -43,6 +44,6 @@ class FilesystemHDF:
 
     def get_directory(self):
         return self.directory
-    
+
     def to_binary(self):
         return FilesystemBinary(self.directory, self.files_pattern, id)

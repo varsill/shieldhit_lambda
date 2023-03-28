@@ -56,7 +56,9 @@ def launch_test(
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
     launch_single_mapper = resolve_remote_mapper(faas_environment)
-    launch_multiple_mappers = prepare_multiple_remote_mappers_function(launch_single_mapper)
+    launch_multiple_mappers = prepare_multiple_remote_mappers_function(
+        launch_single_mapper
+    )
     launch_reducer = resolve_remote_reducer(faas_environment)
 
     # mapping
@@ -66,13 +68,13 @@ def launch_test(
         how_many_mappers,
         dat_files,
         SHOULD_MAPPER_PRODUCE_HDF,
-        save_to="download"
+        save_to="download",
     )
     # reducing
     reducer_in_memory_results, cumulative_reduce_time = launch_reducer(
         in_memory_mapper_results, OPERATION, get_from="uploaded"
     )
-   
+
     reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
     # update metrics
     metrics["hdf_results"] = reducer_in_memory_results.to_hdf().read("z_profile_.h5")
