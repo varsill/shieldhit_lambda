@@ -3,7 +3,6 @@ from common import meassure_time, execute_concurrently
 import os
 from datatypes.in_memory import InMemoryBinary
 import lzma
-from typing import NewType
 from workers.aws_mapper import launch_worker as launch_aws_mapper
 from workers.whisk_mapper import launch_worker as launch_whisk_mapper
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
@@ -11,7 +10,7 @@ from datatypes.in_memory import InMemoryBinary, InMemoryHDF
 import functools
 import glob
 
-RemoteMapperEnvironment = NewType("RemoteMapperEnvironment", str)
+
 
 def send_request_to_remote_mapper(worker_id, how_many_samples, files, lambda_url, should_produce_hdf, save_to):
   if should_produce_hdf:
@@ -35,7 +34,7 @@ def send_request_to_remote_mapper(worker_id, how_many_samples, files, lambda_url
   }
   return result
 
-def resolve_remote_mapper(faas_environment: RemoteMapperEnvironment):
+def resolve_remote_mapper(faas_environment: RemoteEnvironment):
     if faas_environment == "whisk":
        return launch_whisk_mapper
     elif faas_environment=="aws": 

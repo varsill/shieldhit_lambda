@@ -16,11 +16,10 @@ import glob
 from datatypes.filesystem import FilesystemBinary
 from datatypes.in_memory import InMemoryHDF
 from workers.common.remote_mapper_invocation_api import (
-    RemoteMapperEnvironment,
     resolve_remote_mapper,
 )
+from workers.common.remote import RemoteEnvironment
 from workers.common.remote_reducer_invocation_api import (
-    RemoteReducerEnvironment,
     resolve_remote_reducer,
 )
 from launchers.common import prepare_multiple_remote_mappers_function
@@ -94,8 +93,7 @@ def mapper_and_bdo_reducer(
 def launch_test(
     how_many_samples: int,
     how_many_mappers: int,
-    max_samples_per_mapper: int,
-    faas_environment: RemoteMapperEnvironment,
+    faas_environment: RemoteEnvironment,
 ) -> Dict:
     """
     A function that runs a given test case.
@@ -104,8 +102,7 @@ def launch_test(
     Args:
         how_many_samples (int): number of samples that should be generated
         how_many_mappers (int): number of workers that should be used for samples generation
-        max_samples_per_mapper (int):
-        faas_environment (RemoteMapperEnvironment): "whisk" if HPCWHisk should be used, "aws" if AWS Lambda should be used
+        faas_environment (RemoteEnvironment): "whisk" if HPCWHisk should be used, "aws" if AWS Lambda should be used
 
     Returns:
         Dict: a dictionary with metrics gathered within the test
@@ -150,12 +147,12 @@ def launch_test(
     reducer_in_memory_results, hdf_reduce_time = launch_local_hdf_reducer(
         mapper_and_reducer_in_filesystem_results
     )
-    workers_times = [r["simulation_time"] for r in results]
+    mappers_times = [r["simulation_time"] for r in results]
     # update metrics
     metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")
     metrics["reduce_time"] = bdo_reducer_times + hdf_reduce_time
     metrics["map_time"] = map_time
-    metrics["workers_times"] = workers_times
+    metrics["mappers_times"] = mappers_times
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)

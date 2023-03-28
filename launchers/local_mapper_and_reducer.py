@@ -1,6 +1,6 @@
 import subprocess
 from datatypes.filesystem import FilesystemHDF
-from workers.common.remote_mapper_invocation_api import RemoteMapperEnvironment
+from workers.common.remote import RemoteEnvironment
 from typing import Dict
 import os
 from common import meassure_time, execute_concurrently
@@ -26,8 +26,7 @@ def launch_mapper(mapper_id, how_many_samples_per_mapper):
 def launch_test(
     how_many_samples: int,
     how_many_mappers: int,
-    max_samples_per_mapper: int,
-    faas_environment: RemoteMapperEnvironment,
+    faas_environment: RemoteEnvironment,
 ) -> Dict:
     # initial preparation
     metrics = {}
@@ -36,7 +35,7 @@ def launch_test(
     how_many_samples_per_mapper = int(how_many_samples / how_many_mappers)
     # mapping
     subprocess.check_output(f"cp {INPUT_FILES_DIR}/* {TEMPORARY_RESULTS}", shell=True)
-    workers_times, map_time = meassure_time(
+    mappers_times, map_time = meassure_time(
         lambda: execute_concurrently(
             functools.partial(
                 launch_mapper, how_many_samples_per_mapper=how_many_samples_per_mapper
@@ -57,7 +56,7 @@ def launch_test(
     metrics["hdf_results"] = reducer_filesystem_result.to_memory().read("z_profile_.h5")
     metrics["reduce_time"] = reduce_time
     metrics["map_time"] = map_time
-    metrics["workers_times"] = workers_times
+    metrics["mappers_times"] = mappers_times
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)
     shutil.rmtree(FINAL_RESULTS)

@@ -59,7 +59,6 @@ if __name__ == "__main__":
                 lambda: launch_test(
                     how_many_samples=test_case_params["number_of_samples"],
                     how_many_mappers=test_case_params["number_of_workers"],
-                    max_samples_per_mapper=1000,
                     faas_environment=FAAS_ENVIRONMENT,
                 )
             )

@@ -8,8 +8,8 @@ from workers.aws_bdo_reducer import launch_worker as launch_aws_bdo_reducer
 from workers.whisk_bdo_reducer import launch_worker as launch_whisk_bdo_reducer
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
 import functools
+from workers.common.remote import RemoteEnvironment
 
-RemoteReducerEnvironment = NewType("RemoteReducerEnvironment", str)
 
 def send_request_to_remote_reducer(files, operation, lambda_url, worker_id_prefix, get_from):
   json_input = {"action": "reduce", "files": files.read_all(), "operation": operation, "N": worker_id_prefix, "get_from": get_from}
@@ -31,7 +31,7 @@ def send_request_to_remote_reducer(files, operation, lambda_url, worker_id_prefi
 
 
 
-def resolve_remote_reducer(faas_environment: RemoteReducerEnvironment):
+def resolve_remote_reducer(faas_environment: RemoteEnvironment):
     if faas_environment == "whisk":
        return launch_whisk_bdo_reducer
     elif faas_environment=="aws": 
