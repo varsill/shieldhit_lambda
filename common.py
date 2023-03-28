@@ -72,5 +72,8 @@ def separate_results(input_dir, output_dir):
             os.remove(os.path.join(result_subdir, filename))
         shutil.move(filename, result_subdir)
 
-def mktemp():
-    return subprocess.check_output(["mktemp", "-d"]).decode()[:-1]
+def mktemp(dir=""):
+    if dir == "":
+        return subprocess.check_output(["mktemp", "-d"]).decode()[:-1]
+    else:
+        return subprocess.check_output(["mktemp", "-d", "-p", dir]).decode()[:-1]

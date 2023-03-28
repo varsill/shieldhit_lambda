@@ -33,12 +33,19 @@ INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 SHOULD_MAPPER_PRODUCE_HDF = False
-OPERATION = "hdf"
 REDUCE_WHEN = 5
-MAX_RESULT_FILENAME_LENGHT=100
+WHISK_VOLUME = "/net/people/plgrid/plgvarsill/persistent_volume"
 
-def mapper_and_bdo_reducer(worker_id, lock, launch_single_mapper, launch_reducer, how_many_samples, dat_files, should_produce_hdf, results_map, tmp_dir, reduce_when):
-    result = launch_single_mapper(worker_id, how_many_samples, dat_files, should_produce_hdf, save_to="s3")
+def resolve_persistent_storage(faas_environment):
+    if faas_environment == "aws":
+        return "s3", "s3"
+    elif faas_environment == "whisk":
+        return ("volume", WHISK_VOLUME), "volume"
+    else:
+        raise Exception(f"Unknown FaaS environment: {faas_environment}")
+
+def mapper_and_bdo_reducer(worker_id, lock, launch_single_mapper, launch_reducer, how_many_samples, dat_files, should_produce_hdf, results_map, tmp_dir, save_to, get_from):
+    result = launch_single_mapper(worker_id, how_many_samples, dat_files, should_produce_hdf, save_to=save_to)
     number_of_files_produced_by_me = len(result["files"].read_all().keys())
     with lock:
         if int(len(results_map.keys())/number_of_files_produced_by_me) == REDUCE_WHEN:
@@ -53,7 +60,7 @@ def mapper_and_bdo_reducer(worker_id, lock, launch_single_mapper, launch_reducer
                 results_map[key] = value
             return {"type": "JUST_MAPPER", "map_time": result["request_time"], "simulation_time": result["simulation_time"]}
     reducer_in_memory_results, reduce_time = launch_reducer(
-        left_in_memory_mapper_results, "hdf", get_from="s3", worker_id_prefix=str(worker_id)
+        left_in_memory_mapper_results, "hdf", get_from=get_from, worker_id_prefix=str(worker_id)
     )
     reducer_in_filesystem_results = reducer_in_memory_results.to_filesystem(tmp_dir)
     return {"type": "MAPPER_AND_REDUCER", "results": reducer_in_filesystem_results, "map_time": result["request_time"], "reduce_time": reduce_time, "simulation_time": result["simulation_time"]}
@@ -86,13 +93,12 @@ def launch_test(
     launch_single_mapper = resolve_remote_mapper(faas_environment)
     launch_reducer = resolve_remote_reducer(faas_environment)
     how_many_samples_per_mapper = int(how_many_samples/how_many_mappers)
-    
+    save_to, get_from = resolve_persistent_storage(faas_environment)
     # mapping and partial reducing
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
     m = multiprocessing.Manager()
     lock = m.Lock()
 
-    #results_list = ShareableList(["x"*MAX_RESULT_FILENAME_LENGHT]*REDUCE_WHEN)
     manager = Manager()
     shared_results_map = manager.dict() 
     with Pool(processes=how_many_mappers) as pool:
@@ -105,8 +111,9 @@ def launch_test(
             dat_files=dat_files,
             should_produce_hdf=SHOULD_MAPPER_PRODUCE_HDF,
             results_map=shared_results_map,
-            tmp_dir=TEMPORARY_RESULTS,
-            reduce_when=REDUCE_WHEN
+            tmp_dir=TEMPORARY_RESULTS, 
+            save_to=save_to,
+            get_from=get_from
         )
         results = pool.map_async(concurrent_function, range(how_many_mappers))
         results.wait()

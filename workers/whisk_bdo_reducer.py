@@ -10,7 +10,7 @@ def launch_worker(files, operation, get_from, worker_id_prefix = ""):
     )
 
     reducer_results, reduce_time = meassure_time(lambda: send_request_to_remote_reducer(
-        files.read_all(),
+        files,
         operation,
         os.getenv("WHISK_ACTION_URL"), 
         worker_id_prefix,
