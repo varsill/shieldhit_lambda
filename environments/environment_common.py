@@ -88,6 +88,7 @@ def mapper(n, N, files, should_produce_hdf, save_to):
             results_map[just_file_name] = f"{volume_tmp_dir}/{just_file_name}"
     else:
         raise Exception(f"Unknown save_to parameter: {save_to}")
+    subprocess.check_output(f"rm -r {tmpdir}", shell=True)
     return results_map
 
 
@@ -124,6 +125,7 @@ def reducer(files, get_from, operation, worker_id_prefix):
     all_hdf_files = glob.glob(f"{tmpdir}/*{extension}")
     all_hdf_files_with_changed_name = _rename_hdf_files(all_hdf_files, worker_id_prefix)
     result_map = Converters.files_to_map(all_hdf_files_with_changed_name, lzma.compress)
+    subprocess.check_output(f"rm -r {tmpdir}", shell=True)
     return result_map
 
 

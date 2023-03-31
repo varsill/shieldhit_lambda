@@ -11,7 +11,7 @@ INPUT_FILES_DIR = "input"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 OPERATION = "hdf"
-
+LAUNCH_NAME = "local_local"
 
 def launch_mapper(mapper_id, how_many_samples_per_mapper):
     _mapping_result, worker_time = meassure_time(

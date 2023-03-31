@@ -28,7 +28,7 @@ TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 SHOULD_MAPPER_PRODUCE_HDF = False
 OPERATION = "hdf"
-
+LAUNCH_NAME = "remote_remote_bdo"
 
 def launch_test(
     how_many_samples: int,
@@ -60,7 +60,7 @@ def launch_test(
 
     # mapping
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
-    in_memory_mapper_results, map_time, mappers_times = launch_multiple_mappers(
+    in_memory_mapper_results, map_time, mappers_request_times, mappers_simulation_times = launch_multiple_mappers(
         how_many_samples,
         how_many_mappers,
         dat_files,
@@ -68,17 +68,19 @@ def launch_test(
         save_to="download",
     )
     # reducing
-    reducer_in_memory_results, cumulative_reduce_time = launch_reducer(
+    reducer_in_memory_results, reducer_simulation_time, reducer_request_time = launch_reducer(
         in_memory_mapper_results, OPERATION, get_from="uploaded"
     )
 
     reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
     # update metrics
     metrics["hdf_results"] = reducer_in_memory_results.to_hdf().read("z_profile_.h5")
-    metrics["reduce_time"] = cumulative_reduce_time
     metrics["map_time"] = map_time
-    metrics["mappers_times"] = mappers_times
-
+    metrics["mappers_request_times"] = mappers_request_times
+    metrics["mappers_simulation_times"] = mappers_simulation_times
+    metrics["reducer_request_time"] = reducer_request_time
+    metrics["reducer_simulation_time"] = reducer_simulation_time
+    metrics["reduce_time"] = reducer_request_time
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)
     shutil.rmtree(FINAL_RESULTS)

@@ -9,7 +9,7 @@ from datatypes.filesystem import FilesystemBinary, FilesystemHDF
 from datatypes.in_memory import InMemoryBinary, InMemoryHDF
 import functools
 import glob
-
+from workers.common.remote import RemoteEnvironment
 
 
 def send_request_to_remote_mapper(worker_id, how_many_samples, files, lambda_url, should_produce_hdf, save_to):

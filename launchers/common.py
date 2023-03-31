@@ -38,11 +38,11 @@ def _launch_multiple_remote_mappers(
     successfull_mapper_results = [r for r in mapper_results if r["status"] == "OK"]
     print(f"SUCCESS/ALL: {len(successfull_mapper_results)}/{how_many_workers}")
 
-    mappers_times = []
-
+    mappers_request_times = []
+    mappers_simulation_times = []
     in_memory_data_to_return = InMemoryBinary({}, lzma.decompress)
     for r in successfull_mapper_results:
         in_memory_data_to_return.merge(r["files"])
-        del r["files"]
-        mappers_times.append(r)
-    return in_memory_data_to_return, map_time, mappers_times
+        mappers_request_times.append(r["request_time"])
+        mappers_simulation_times.append(r["simulation_time"])
+    return in_memory_data_to_return, map_time, mappers_request_times, mappers_simulation_times

@@ -28,6 +28,7 @@ TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 SHOULD_MAPPER_PRODUCE_HDF = True
 OPERATION = "hdf"
+LAUNCH_NAME = "remote_local_hdf"
 
 
 def launch_test(
@@ -58,7 +59,7 @@ def launch_test(
     )
     # mapping
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
-    in_memory_mapper_results, map_time, mappers_times = launch_multiple_mappers(
+    in_memory_mapper_results, map_time, mappers_request_times, mappers_simulation_times = launch_multiple_mappers(
         how_many_samples,
         how_many_mappers,
         dat_files,
@@ -69,15 +70,16 @@ def launch_test(
         TEMPORARY_RESULTS
     ).to_hdf()
     # reducing
-    reducer_in_memory_results, cumulative_reduce_time = launch_local_hdf_reducer(
+    reducer_in_memory_results, reduce_time = launch_local_hdf_reducer(
         mapper_filesystem_hdf_results
     )
     reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
     # update metrics
     metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")
-    metrics["reduce_time"] = cumulative_reduce_time
     metrics["map_time"] = map_time
-    metrics["mappers_times"] = mappers_times
+    metrics["mappers_request_times"] = mappers_request_times
+    metrics["mappers_simulation_times"] = mappers_simulation_times
+    metrics["reduce_time"] = reduce_time
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)

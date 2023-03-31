@@ -12,9 +12,8 @@ def launch_worker(
         send_request_to_remote_reducer,
     )
 
-    reducer_results, reduce_time = meassure_time(
-        lambda: send_request_to_remote_reducer(
+    reducer_results = send_request_to_remote_reducer(
             files, operation, os.getenv("AWS_LAMBDA_URL"), worker_id_prefix, get_from
         )
-    )
-    return reducer_results["files"], reduce_time
+    
+    return reducer_results["files"], reducer_results["simulation_time"], reducer_results["request_time"]

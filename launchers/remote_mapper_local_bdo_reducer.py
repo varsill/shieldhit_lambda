@@ -26,7 +26,7 @@ TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 SHOULD_MAPPER_PRODUCE_HDF = False
 OPERATION = "hdf"
-
+LAUNCH_NAME = "remote_local_bdo"
 
 def launch_test(
     how_many_samples: int,
@@ -56,7 +56,7 @@ def launch_test(
     )
     # mapping
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
-    in_memory_mapper_results, map_time, mappers_times = launch_multiple_mappers(
+    in_memory_mapper_results, map_time, mappers_request_times, mappers_simulation_times = launch_multiple_mappers(
         how_many_samples,
         how_many_mappers,
         dat_files,
@@ -67,15 +67,19 @@ def launch_test(
         TEMPORARY_RESULTS
     )
     # reducing
-    reducer_filesystem_result, cumulative_reduce_time = launch_local_bdo_reducer(
+    reducer_filesystem_result, reduce_time = launch_local_bdo_reducer(
         mapper_filesystem_binary_results, FINAL_RESULTS, "hdf"
     )
 
     # update metrics
-    metrics["hdf_results"] = reducer_filesystem_result.to_memory().read("z_profile_.h5")
-    metrics["reduce_time"] = cumulative_reduce_time
+    try:
+        metrics["hdf_results"] = reducer_filesystem_result.to_memory().read("z_profile_.h5")
+    except Exception as e:
+        pass
     metrics["map_time"] = map_time
-    metrics["mappers_times"] = mappers_times
+    metrics["mappers_request_times"] = mappers_request_times
+    metrics["mappers_simulation_times"] = mappers_simulation_times
+    metrics["reduce_time"] = reduce_time
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)

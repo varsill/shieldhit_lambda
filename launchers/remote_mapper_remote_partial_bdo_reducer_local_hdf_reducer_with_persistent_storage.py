@@ -27,6 +27,7 @@ from workers.local_hdf_reducer import launch_worker as launch_local_hdf_reducer
 from multiprocessing import Pool, Lock
 import multiprocessing
 from multiprocessing import Manager
+import time
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
@@ -34,6 +35,8 @@ FINAL_RESULTS = "results/final"
 SHOULD_MAPPER_PRODUCE_HDF = False
 REDUCE_WHEN = 5
 WHISK_VOLUME = "/net/people/plgrid/plgvarsill/persistent_volume"
+LAUNCH_NAME = f"remote_remote_bdo_{REDUCE_WHEN}_persistent_local_hdf"
+
 
 
 def resolve_persistent_storage(faas_environment):
@@ -58,44 +61,51 @@ def mapper_and_bdo_reducer(
     save_to,
     get_from,
 ):
-    result = launch_single_mapper(
-        worker_id, how_many_samples, dat_files, should_produce_hdf, save_to=save_to
-    )
-    number_of_files_produced_by_me = len(result["files"].read_all().keys())
-    with lock:
-        if int(len(results_map.keys()) / number_of_files_produced_by_me) == REDUCE_WHEN:
-            left_in_memory_results_map = {}
-            for key, value in results_map.items():
-                left_in_memory_results_map[key] = value
-            left_in_memory_mapper_results = InMemoryBinary(
-                left_in_memory_results_map, transform=lzma.compress
-            )
-            for key in results_map.keys():
-                del results_map[key]
-        else:
-            for key, value in result["files"].read_all().items():
-                results_map[key] = value
-            return {
-                "type": "JUST_MAPPER",
-                "map_time": result["request_time"],
-                "simulation_time": result["simulation_time"],
-            }
-    reducer_in_memory_results, reduce_time = launch_reducer(
-        left_in_memory_mapper_results,
-        "hdf",
-        get_from=get_from,
-        worker_id_prefix=str(worker_id),
-    )
-    reducer_in_filesystem_results = reducer_in_memory_results.to_filesystem(tmp_dir)
-    return {
-        "type": "MAPPER_AND_REDUCER",
-        "results": reducer_in_filesystem_results,
-        "map_time": result["request_time"],
-        "reduce_time": reduce_time,
-        "simulation_time": result["simulation_time"],
-    }
-
-
+    try:
+        result = launch_single_mapper(
+            worker_id, how_many_samples, dat_files, should_produce_hdf, save_to=save_to
+        )
+        number_of_files_produced_by_me = len(result["files"].read_all().keys())
+        with lock:
+            if int(len(results_map.keys()) / number_of_files_produced_by_me) == REDUCE_WHEN:
+                left_in_memory_results_map = {}
+                for key, value in results_map.items():
+                    left_in_memory_results_map[key] = value
+                left_in_memory_mapper_results = InMemoryBinary(
+                    left_in_memory_results_map, transform=lzma.compress
+                )
+                for key in results_map.keys():
+                    del results_map[key]
+            else:
+                for key, value in result["files"].read_all().items():
+                    results_map[key] = value
+                return {
+                    "status": "OK",
+                    "type": "JUST_MAPPER",
+                    "mapper_request_time": result["request_time"],
+                    "mapper_simulation_time": result["simulation_time"],
+                }
+        reducer_in_memory_results, reduce_time_simulation, reduce_time_request = launch_reducer(
+            left_in_memory_mapper_results,
+            "hdf",
+            get_from=get_from,
+            worker_id_prefix=str(worker_id),
+        )
+        reducer_in_filesystem_results = reducer_in_memory_results.to_filesystem(tmp_dir)
+        return {
+            "status": "OK",
+            "type": "MAPPER_AND_REDUCER",
+            "results": reducer_in_filesystem_results,
+            "mapper_request_time": result["request_time"],
+            "mapper_simulation_time": result["simulation_time"],
+            "bdo_reducer_request_time": reduce_time_request,
+            "bdo_reducer_simulation_time": reduce_time_simulation
+        }
+    except Exception as e:
+        print(e)
+        return {
+            "status": "ERROR"
+        }
 def launch_test(
     how_many_samples: int,
     how_many_mappers: int,
@@ -129,6 +139,7 @@ def launch_test(
 
     manager = Manager()
     shared_results_map = manager.dict()
+    start_time = time.time()
     with Pool(processes=how_many_mappers) as pool:
         concurrent_function = functools.partial(
             mapper_and_bdo_reducer,
@@ -147,25 +158,29 @@ def launch_test(
         results.wait()
 
     results = results.get()
-    map_time = sum([r["map_time"] for r in results])
-    bdo_reducer_times = sum(
-        r["reduce_time"] for r in results if r["type"] == "MAPPER_AND_REDUCER"
-    )
+    mapper_and_bdo_reducer_time = time.time()-start_time
+    number_of_all_results = len(results)
+    results = [r for r in results if r["status"]=="OK"]
+    number_of_ok_results = len(results)
+    print(f"SUCCESS/ALL: {number_of_ok_results}/{number_of_all_results}")
     mapper_and_reducer_in_filesystem_results = FilesystemBinary(
         TEMPORARY_RESULTS, "*.h5"
     )
 
-    reducer_in_memory_results, hdf_reduce_time = launch_local_hdf_reducer(
+    reducer_in_memory_results, hdf_reducer_time = launch_local_hdf_reducer(
         mapper_and_reducer_in_filesystem_results
     )
     reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
-    mappers_times = [r["simulation_time"] for r in results]
     # update metrics
     metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")
-    metrics["reduce_time"] = bdo_reducer_times + hdf_reduce_time
-    metrics["map_time"] = map_time
-    metrics["mappers_times"] = mappers_times
-
+    metrics["hdf_reducer_time"] = hdf_reducer_time
+    metrics["mapper_and_bdo_reducer_time"] = mapper_and_bdo_reducer_time
+    metrics["mappers_request_times"] = [r["mapper_request_time"] for r in results]
+    metrics["mappers_simulation_times"] = [r["mapper_simulation_time"] for r in results]
+    metrics["bdo_reducers_request_times"] =  [r["bdo_reducer_request_time"] for r in results if r["type"] == "MAPPER_AND_REDUCER"]
+    metrics["bdo_reducers_simulation_times"] =  [r["bdo_reducer_simulation_time"] for r in results if r["type"] == "MAPPER_AND_REDUCER"]
+    metrics["map_time"] = None
+    metrics["reduce_time"] = None
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)
     shutil.rmtree(FINAL_RESULTS)

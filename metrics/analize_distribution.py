@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import h5py
 import numpy as np
 
-RESULTS_DUMP_FILE = "metrics/results/just_test.dump"
+RESULTS_DUMP_FILE = "emergency.dump"
 PLOT_FILE = "DISTRIBUTION.png"
-GROUP_BY_PARAM = "number_of_samples"
+GROUP_BY_PARAM = "number_of_workers"
 
 
 def __load_hdf(file_path):
