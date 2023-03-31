@@ -5,7 +5,7 @@ import functools
 import subprocess
 
 RESULTS_BASE_PATH = "/home/ubuntu/backup/lambda_results"
-FILENAME = "remote_remote_bdo_5_persistent_local_hdf_aws_60-200_workers_100k_samples"
+FILENAME = "remote_local_bdo_whisk_60-200_workers_100k_samples"
 RESULTS_DUMP_FILE = f"{RESULTS_BASE_PATH}/{FILENAME}.dump"
 GROUP_BY_PARAM = "number_of_workers"
 # to_plot = results.filter(axis="columns", items=["test_run_number", "params.number_of_workers"])
@@ -13,15 +13,6 @@ GROUP_BY_PARAM = "number_of_workers"
 # results_std = results.groupby("params.number_of_workers").std(
 #     ["results.map_time", "results.reduce_time", "results.total_duration"]
 # )
-
-
-
-
-def load(input_file_path):
-    with open(input_file_path, "rb") as input_file:
-        results = pickle.load(input_file)
-    return results
-
 
 def _agregate_times(column, metric): 
     if column.name != f"metrics.{metric}":
@@ -145,6 +136,6 @@ def plot_map_reduce_total_time_vs_params(results, group_by_param, plot_filename)
     plt.savefig(plot_filename)
 
 
-results = load(RESULTS_DUMP_FILE)
+
 #plot_percentage_of_successfull_responses(results, GROUP_BY_PARAM, f"{FILENAME}_time_vs_{GROUP_BY_PARAM}.png")
-plot_map_reduce_total_time_vs_params(results, GROUP_BY_PARAM, f"{FILENAME}_simulation_and_request_time_vs{GROUP_BY_PARAM}.png")
+#plot_request_times_histogram(results, GROUP_BY_PARAM, f"{FILENAME}_simulation_and_request_time_vs{GROUP_BY_PARAM}.png")
