@@ -1,28 +1,39 @@
-from launchers.remote_mapper_local_bdo_reducer import launch_test, LAUNCH_NAME
+from launchers.remote_mapper_local_hdf_reducer import launch_test, LAUNCH_NAME
 from common import meassure_time
 import pickle
 import shutil
 import numpy as np
 import os
 import subprocess
+import traceback
 
-TEST_RUNNER_POSTFIX="60-200_workers_100k_samples"
-
+TEST_RUNNER_POSTFIX="10_workers_1000_samples"
 METRICS_RESULT_BASE_PATH = "/home/ubuntu/backup/lambda_results"
-FAAS_ENVIRONMENT = "whisk"
+FAAS_ENVIRONMENT = "aws"
 HOW_MANY_TRIES = 3
 
 TEST_CASES = [
-    {"number_of_workers": 60, "number_of_samples": 1000000},
-    {"number_of_workers": 70, "number_of_samples": 1000000},
-    {"number_of_workers": 80, "number_of_samples": 1000000},
-    {"number_of_workers": 90, "number_of_samples": 1000000},
-    {"number_of_workers": 100, "number_of_samples": 1000000},
-    {"number_of_workers": 120, "number_of_samples": 1000000},
-    {"number_of_workers": 140, "number_of_samples": 1000000},
-    {"number_of_workers": 160, "number_of_samples": 1000000},
-    {"number_of_workers": 180, "number_of_samples": 1000000},
-    {"number_of_workers": 200, "number_of_samples": 1000000}
+    {"number_of_workers": 10, "number_of_samples": 1000},
+    # {"number_of_workers": 70, "number_of_samples": 1000000},
+    # {"number_of_workers": 80, "number_of_samples": 1000000},
+    # {"number_of_workers": 90, "number_of_samples": 1000000},
+    # {"number_of_workers": 100, "number_of_samples": 1000000},
+    # {"number_of_workers": 120, "number_of_samples": 1000000},
+    # {"number_of_workers": 140, "number_of_samples": 1000000},
+    # {"number_of_workers": 160, "number_of_samples": 1000000},
+    # {"number_of_workers": 180, "number_of_samples": 1000000},
+    # {"number_of_workers": 200, "number_of_samples": 1000000},
+    # {"number_of_workers": 230, "number_of_samples": 1000000},
+    # {"number_of_workers": 260, "number_of_samples": 1000000},
+    # {"number_of_workers": 300, "number_of_samples": 1000000},
+    # {"number_of_workers": 330, "number_of_samples": 1000000},
+    # {"number_of_workers": 360, "number_of_samples": 1000000},
+    # {"number_of_workers": 260, "number_of_samples": 1000000},
+    # {"number_of_workers": 280, "number_of_samples": 1000000},
+    # {"number_of_workers": 300, "number_of_samples": 1000000},
+    # {"number_of_workers": 320, "number_of_samples": 1000000},
+    # {"number_of_workers": 340, "number_of_samples": 1000000},
+    # {"number_of_workers": 360, "number_of_samples": 1000000},
 ]
 # TEST_CASES.reverse()
 
@@ -52,7 +63,10 @@ if __name__ == "__main__":
 
                 test_results.append(test_instance)
             except Exception as e:
-                print("ERROR", e)
+                print(traceback.format_exc())
+                print("test case runner ERROR", e)
+                shutil.rmtree("results/final")
+                shutil.rmtree("results/temporary")
                 continue
     try:
         filename = f"{LAUNCH_NAME}_{FAAS_ENVIRONMENT}_{TEST_RUNNER_POSTFIX}"

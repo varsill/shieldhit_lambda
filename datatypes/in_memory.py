@@ -44,7 +44,11 @@ class InMemoryHDF:
 
         for filename in self.files_map.keys():
             with h5py.File(f"{output_dir}/{filename}", "w") as f:
-                f.create_dataset("data", data=self.files_map[filename])
+                if isinstance(self.files_map[filename], list):
+                    for i in range(len(self.files_map[filename])):
+                        f.create_dataset(f"data_{i}", data=self.files_map[filename][i])
+                else:
+                    f.create_dataset("data", data=self.files_map[filename])
 
         return FilesystemHDF(output_dir)
 

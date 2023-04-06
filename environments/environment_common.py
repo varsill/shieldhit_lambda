@@ -10,7 +10,6 @@ import shutil
 
 BUCKET = "shieldhit-results-bucket"
 
-
 def execute(event):
     action = event.get("action", "action not provided")
     if action == "map":
@@ -46,7 +45,8 @@ def mapper(n, N, files, should_produce_hdf, save_to):
     tmpdir = mktemp()
 
     Converters.map_to_files(files, tmpdir, lzma.decompress)
-
+    #x = subprocess.run(f"cat {tmpdir}/geo.dat", shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #raise Exception(str(x))
     subprocess.check_output(["./shieldhit", "-n", str(n), "-N", str(N), tmpdir])
 
     if should_produce_hdf:
@@ -113,10 +113,10 @@ def reducer(files, get_from, operation, worker_id_prefix):
         for just_filename in files.keys():
             shutil.move(files[just_filename], tmpdir)
 
-    subprocess.check_output(
-        ["./convertmc", operation, "--many", f"{tmpdir}/*.bdo", tmpdir]
-    )
-
+    x = subprocess.run(["./convertmc", operation, "--many", f"{tmpdir}/*.bdo", tmpdir], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    # if x.returncode != 0:
+    #     subprocess.check_output(f"rm -r {tmpdir}", shell=True)
     # x = subprocess.run(f"cat {tmpdir}/{filename}", shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if operation == "image":
         extension = ".png"

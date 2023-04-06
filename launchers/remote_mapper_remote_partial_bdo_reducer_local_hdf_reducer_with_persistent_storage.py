@@ -33,7 +33,7 @@ INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 SHOULD_MAPPER_PRODUCE_HDF = False
-REDUCE_WHEN = 5
+REDUCE_WHEN = 10
 WHISK_VOLUME = "/net/people/plgrid/plgvarsill/persistent_volume"
 LAUNCH_NAME = f"remote_remote_bdo_{REDUCE_WHEN}_persistent_local_hdf"
 
@@ -160,25 +160,30 @@ def launch_test(
     results = results.get()
     mapper_and_bdo_reducer_time = time.time()-start_time
     number_of_all_results = len(results)
-    results = [r for r in results if r["status"]=="OK"]
-    number_of_ok_results = len(results)
+    ok_results = [r for r in results if r["status"]=="OK"]
+    number_of_ok_results = len(ok_results)
     print(f"SUCCESS/ALL: {number_of_ok_results}/{number_of_all_results}")
-    mapper_and_reducer_in_filesystem_results = FilesystemBinary(
-        TEMPORARY_RESULTS, "*.h5"
-    )
 
-    reducer_in_memory_results, hdf_reducer_time = launch_local_hdf_reducer(
-        mapper_and_reducer_in_filesystem_results
-    )
-    reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
+    separate_results(TEMPORARY_RESULTS, TEMPORARY_RESULTS)
+    cumulative_hdf_reduce_time = 0
+    for subdir in glob.glob(f"{TEMPORARY_RESULTS}/*"):
+        mapper_and_reducer_in_filesystem_results = FilesystemBinary(
+            subdir, "*.h5"
+        )
+        reducer_in_memory_results, hdf_reducer_time = launch_local_hdf_reducer(
+            mapper_and_reducer_in_filesystem_results
+        )
+        cumulative_hdf_reduce_time+=hdf_reducer_time
+        if "z_profile.h5" in reducer_in_memory_results.files_map:
+            metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")
+   
     # update metrics
-    metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")
-    metrics["hdf_reducer_time"] = hdf_reducer_time
-    metrics["mapper_and_bdo_reducer_time"] = mapper_and_bdo_reducer_time
-    metrics["mappers_request_times"] = [r["mapper_request_time"] for r in results]
-    metrics["mappers_simulation_times"] = [r["mapper_simulation_time"] for r in results]
-    metrics["bdo_reducers_request_times"] =  [r["bdo_reducer_request_time"] for r in results if r["type"] == "MAPPER_AND_REDUCER"]
-    metrics["bdo_reducers_simulation_times"] =  [r["bdo_reducer_simulation_time"] for r in results if r["type"] == "MAPPER_AND_REDUCER"]
+    metrics["hdf_reduce_time"] = cumulative_hdf_reduce_time
+    metrics["map_and_bdo_reduce_time"] = mapper_and_bdo_reducer_time
+    metrics["mappers_request_times"] = [r["mapper_request_time"] for r in ok_results]
+    metrics["mappers_simulation_times"] = [r["mapper_simulation_time"] for r in ok_results]
+    metrics["bdo_reducers_request_times"] =  [r["bdo_reducer_request_time"] for r in ok_results if r["type"] == "MAPPER_AND_REDUCER"]
+    metrics["bdo_reducers_simulation_times"] =  [r["bdo_reducer_simulation_time"] for r in ok_results if r["type"] == "MAPPER_AND_REDUCER"]
     metrics["map_time"] = None
     metrics["reduce_time"] = None
     # cleanup

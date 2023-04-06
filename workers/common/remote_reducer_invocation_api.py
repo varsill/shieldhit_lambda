@@ -16,6 +16,7 @@ def send_request_to_remote_reducer(files, operation, lambda_url, worker_id_prefi
   response, request_time = meassure_time( lambda: requests.post(lambda_url, json=json_input, verify=False))
 
   if response.status_code != 200:
+      print("send_request_to_remote_reducer ERROR", response.content)
       raise Exception(
           f"Remote reducer reponse unsuccessful! Reason: {response.content}"
       )

@@ -59,7 +59,15 @@ def load_hdf_result_file(file_path):
     if not os.path.isfile(file_path):
         return None
     f = h5py.File(file_path, "r")
-    return np.array(f["data"])
+    if "data" in f.keys():
+        return np.array(f["data"])
+    else:
+        results_list = []
+        for key in f.keys():
+            if key.startswith("data_"):
+                results_list.append(np.array(f[key]))
+        return results_list
+
 
 
 def separate_results(input_dir, output_dir):

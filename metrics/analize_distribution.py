@@ -15,10 +15,10 @@ def __load_hdf(file_path):
 
 
 
-def plot_distribution(results_dump, group_by_param, plot_filename):
-    results_ref = __load_hdf("metrics/z_profile_ref.h5")
+def plot_distribution(results_dump, group_by_param, plot_filename, title):
+    results_ref = __load_hdf("z_profile_ref.h5")
 
-    results_dump = pd.json_normalize(results_dump).filter(
+    results_dump = results_dump.filter(
         axis="columns", items=["metrics.hdf_results", f"params.{group_by_param}"]
     )
 
@@ -49,7 +49,9 @@ def plot_distribution(results_dump, group_by_param, plot_filename):
         Y.append(mse_normalized)
 
     plt.scatter(X, Y)
-    plt.xlabel("Number of workers")
+    plt.xlabel(group_by_param)
     plt.ylabel("MSE in contrast to single worker results")
     plt.yscale("log")
+    #plt.ylim([0, 0.0001])
+    plt.title(title)
     plt.savefig(plot_filename)
