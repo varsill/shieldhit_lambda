@@ -8,7 +8,7 @@ import time
 from multiprocessing import Manager, Pool
 from typing import Dict
 
-from common import meassure_time, separate_results
+from common import separate_results
 from datatypes.filesystem import FilesystemBinary
 from datatypes.in_memory import InMemoryBinary
 from workers.common.remote import RemoteEnvironment

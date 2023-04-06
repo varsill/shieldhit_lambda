@@ -1,9 +1,6 @@
 import os
 
 from datatypes.in_memory import InMemoryBinary
-from workers.common.remote_mapper_invocation_api import \
-    send_request_to_remote_mapper
-
 
 def launch_worker(
     worker_id: int,
@@ -14,6 +11,7 @@ def launch_worker(
 ):
 
     try:
+        from workers.common.remote_mapper_invocation_api import send_request_to_remote_mapper
         return send_request_to_remote_mapper(
             worker_id,
             how_many_samples,

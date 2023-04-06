@@ -8,7 +8,7 @@ import time
 from multiprocessing import Pool
 from typing import Dict
 
-from common import meassure_time, separate_results
+from common import separate_results
 from datatypes.filesystem import FilesystemBinary
 from workers.common.remote import RemoteEnvironment
 from workers.common.remote_mapper_invocation_api import resolve_remote_mapper

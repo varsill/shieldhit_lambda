@@ -5,7 +5,7 @@ from typing import Any
 
 from common import load_hdf_result_file
 from converters import Converters, id
-from datatypes.in_memory import InMemoryBinary, InMemoryHDF
+ 
 
 
 @dataclass
@@ -15,7 +15,7 @@ class FilesystemBinary:
     transform: Any = id
 
     def to_memory(self):
-
+        from datatypes.in_memory import InMemoryBinary
         all_files = glob.glob(f"{self.directory}/{self.files_pattern}")
         return InMemoryBinary(Converters.files_to_map(all_files, self.transform))
 
@@ -34,7 +34,7 @@ class FilesystemHDF:
     files_pattern: str = "*"
 
     def to_memory(self):
-
+        from datatypes.in_memory import InMemoryHDF
         all_files = glob.glob(f"{self.directory}/{self.files_pattern}")
         results = {}
         for file in all_files:
