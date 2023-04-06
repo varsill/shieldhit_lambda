@@ -32,7 +32,6 @@ def plot_request_times_histogram(results, group_by_param, plot_filename, metric,
         .agg(agregator)
         .reset_index()
     )
-    print(results_avg)
     all_request_times = results_avg[f"metrics.{metric}"].tolist()[0]
     plt.hist(all_request_times)
     plt.xlabel("Request time [s]")
@@ -78,27 +77,6 @@ def plot_percentage_of_successfull_responses(results, group_by_param, plot_filen
     plt.title(title)
     plt.savefig(plot_filename)
 
-# def plot_simulation_time_and_request_time_ratio_vs_param(results, group_by_param, plot_filename, workers, title):
-#     results["mean_simulation_time"] = results.apply(lambda row: sum(row[f"metrics.{workers}_simulation_times"])/len(row[f"metrics.{workers}_simulation_times"]) if len(row[f"metrics.{workers}_simulation_times"])>0 else 0, axis=1)
-#     results["mean_request_time"] = results.apply(lambda row: sum(row[f"metrics.{workers}_request_times"])/len(row[f"metrics.{workers}_request_times"]) if len(row[f"metrics.{workers}_request_times"])>0 else 0, axis=1)
-#     results["simulation_to_request"] = results.apply(lambda row: row["mean_simulation_time"]/row["mean_request_time"]*100 if row["mean_request_time"]>0 else 0, axis=1)
-#     results_avg = (
-#         results.groupby(f"params.{group_by_param}")
-#         .mean(["simulation_to_request"])
-#         .reset_index()
-#     )
-#     plt.errorbar(
-#         results_avg[f"params.{group_by_param}"],
-#         results_avg["simulation_to_request"]
-#     )
-#     plt.legend()
-#     plt.title(f"Simulation time to request time ratio for {workers}")
-#     plt.xlabel(f"{group_by_param}")
-#     plt.ylabel(f"[%]")
-#     plt.title(title)
-#     plt.savefig(plot_filename)
-
-
 def plot_map_reduce_total_time_vs_params(results, group_by_param, plot_filename, times_fields_list, title):
     results_avg = (
         results.groupby(f"params.{group_by_param}")
@@ -137,7 +115,6 @@ def plot_simulation_time_and_request_time_ratio_vs_param(results, group_by_param
         results_avg["simulation_to_request"]
     )
     plt.legend()
-    #plt.title(f"Simulation time to request time ratio for {workers}")
     plt.xlabel(f"{group_by_param}")
     plt.ylabel(f"[%]")
     plt.ylim([0,100])

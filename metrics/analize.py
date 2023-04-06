@@ -33,8 +33,8 @@ success_ratio_parser = subparsers.add_parser("success_ratio")
 simulation_to_request_parser = subparsers.add_parser("simulation_to_request")
 simulation_to_request_parser.add_argument("-w", "--workers", default="mappers")
 
-simulation_and_request_parser = subparsers.add_parser("simulation_and_request")
-simulation_and_request_parser.add_argument("-w", "--workers", default="mappers")
+simulation_request_ratio_parser = subparsers.add_parser("simulation_request_ratio")
+simulation_request_ratio_parser.add_argument("-w", "--workers", default="mappers")
 
 times_parser = subparsers.add_parser("times")
 times_parser.add_argument("-f", "--fields", default="map_time,reduce_time,total_duration")
@@ -71,7 +71,7 @@ elif operation == "simulation_to_request":
 elif operation == "success_ratio":
   plot_percentage_of_successfull_responses(input_results_dump, args.group_by_param, plot_filename, title=args.title)
 
-elif operation == "simulation_and_request":
+elif operation == "simulation_request_ratio":
   plot_simulation_time_and_request_time_ratio_vs_param(input_results_dump, args.group_by_param, plot_filename, workers=args.workers, title=args.title)
 
 elif operation == "times":
