@@ -1,8 +1,7 @@
-import pickle
-import pandas as pd
-import matplotlib.pyplot as plt
 import h5py
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 RESULTS_DUMP_FILE = "emergency.dump"
 PLOT_FILE = "DISTRIBUTION.png"
@@ -12,7 +11,6 @@ GROUP_BY_PARAM = "number_of_workers"
 def __load_hdf(file_path):
     f = h5py.File(file_path, "r")
     return np.array(f["data"])
-
 
 
 def plot_distribution(results_dump, group_by_param, plot_filename, title):
@@ -52,6 +50,6 @@ def plot_distribution(results_dump, group_by_param, plot_filename, title):
     plt.xlabel(group_by_param)
     plt.ylabel("MSE in contrast to single worker results")
     plt.yscale("log")
-    #plt.ylim([0, 0.0001])
+    # plt.ylim([0, 0.0001])
     plt.title(title)
     plt.savefig(plot_filename)

@@ -1,14 +1,18 @@
-import subprocess
 import glob
-import os
-from common import mktemp
-from converters import Converters, id
 import lzma
-import string
+import os
 import random
 import shutil
+import string
+import subprocess
+
+import boto3
+
+from common import mktemp
+from converters import Converters
 
 BUCKET = "shieldhit-results-bucket"
+
 
 def execute(event):
     action = event.get("action", "action not provided")
@@ -45,8 +49,8 @@ def mapper(n, N, files, should_produce_hdf, save_to):
     tmpdir = mktemp()
 
     Converters.map_to_files(files, tmpdir, lzma.decompress)
-    #x = subprocess.run(f"cat {tmpdir}/geo.dat", shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #raise Exception(str(x))
+    # x = subprocess.run(f"cat {tmpdir}/geo.dat", shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # raise Exception(str(x))
     subprocess.check_output(["./shieldhit", "-n", str(n), "-N", str(N), tmpdir])
 
     if should_produce_hdf:
@@ -59,7 +63,6 @@ def mapper(n, N, files, should_produce_hdf, save_to):
         all_result_files = glob.glob(f"{tmpdir}/*.bdo")
 
     if save_to == "s3":
-        import boto3
 
         bucket_dir = _get_random_string()
         client = boto3.client("s3")
@@ -102,7 +105,6 @@ def reducer(files, get_from, operation, worker_id_prefix):
     if get_from == "uploaded":
         Converters.map_to_files(files, tmpdir, lzma.decompress)
     elif get_from == "s3":
-        import boto3
 
         client = boto3.client("s3")
         for just_filename in files.keys():
@@ -113,8 +115,13 @@ def reducer(files, get_from, operation, worker_id_prefix):
         for just_filename in files.keys():
             shutil.move(files[just_filename], tmpdir)
 
-    x = subprocess.run(["./convertmc", operation, "--many", f"{tmpdir}/*.bdo", tmpdir], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    
+    x = subprocess.run(
+        ["./convertmc", operation, "--many", f"{tmpdir}/*.bdo", tmpdir],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
     # if x.returncode != 0:
     #     subprocess.check_output(f"rm -r {tmpdir}", shell=True)
     # x = subprocess.run(f"cat {tmpdir}/{filename}", shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

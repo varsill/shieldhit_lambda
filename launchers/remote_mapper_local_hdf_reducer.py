@@ -1,27 +1,13 @@
+import lzma
 import os
 import shutil
-from common import (
-    meassure_time,
-    execute_concurrently,
-    load_hdf_result_file,
-    separate_results,
-)
-from workers.aws_mapper import launch_worker as launch_mapper
-from workers.local_hdf_reducer import launch_worker as launch_local_hdf_reducer
 from typing import Dict
-import h5py
-import lzma
-import functools
-from common import meassure_time
-from converters import Converters
-import glob
-from datatypes.filesystem import FilesystemBinary, FilesystemHDF
-import lzma
-from workers.common.remote_mapper_invocation_api import (
-    resolve_remote_mapper,
-)
+
+from datatypes.filesystem import FilesystemBinary
 from launchers.common import prepare_multiple_remote_mappers_function
 from workers.common.remote import RemoteEnvironment
+from workers.common.remote_mapper_invocation_api import resolve_remote_mapper
+from workers.local_hdf_reducer import launch_worker as launch_local_hdf_reducer
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
@@ -59,7 +45,12 @@ def launch_test(
     )
     # mapping
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
-    in_memory_mapper_results, map_time, mappers_request_times, mappers_simulation_times = launch_multiple_mappers(
+    (
+        in_memory_mapper_results,
+        map_time,
+        mappers_request_times,
+        mappers_simulation_times,
+    ) = launch_multiple_mappers(
         how_many_samples,
         how_many_mappers,
         dat_files,

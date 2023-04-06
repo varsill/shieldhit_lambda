@@ -6,7 +6,6 @@ import os
 import glob
 import shutil
 from converters import Converters
-import lzma
 
 SHOULD_USE_MEMFD = False
 

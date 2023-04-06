@@ -1,9 +1,7 @@
-from common import cmd, meassure_time, mktemp, separate_results
-import shutil
 import glob
-import os
-from datatypes.filesystem import FilesystemHDF, FilesystemBinary
-import functools
+
+from common import cmd, meassure_time, mktemp, separate_results
+from datatypes.filesystem import FilesystemBinary, FilesystemHDF
 
 
 def launch_worker(

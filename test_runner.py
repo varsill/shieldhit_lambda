@@ -1,4 +1,4 @@
-from launchers.remote_mapper_local_hdf_reducer import launch_test, LAUNCH_NAME
+from launchers.remote_mapper_remote_partial_bdo_reducer_local_hdf_reducer_with_persistent_storage import launch_test, LAUNCH_NAME
 from common import meassure_time
 import pickle
 import shutil
@@ -10,7 +10,7 @@ import traceback
 TEST_RUNNER_POSTFIX="10_workers_1000_samples"
 METRICS_RESULT_BASE_PATH = "/home/ubuntu/backup/lambda_results"
 FAAS_ENVIRONMENT = "aws"
-HOW_MANY_TRIES = 3
+HOW_MANY_TRIES = 1
 
 TEST_CASES = [
     {"number_of_workers": 10, "number_of_samples": 1000},

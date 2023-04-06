@@ -1,7 +1,8 @@
-from datatypes.in_memory import InMemoryBinary
 import functools
-from common import meassure_time, execute_concurrently
 import lzma
+
+from common import execute_concurrently, meassure_time
+from datatypes.in_memory import InMemoryBinary
 
 
 def prepare_multiple_remote_mappers_function(launch_mapper):
@@ -45,4 +46,9 @@ def _launch_multiple_remote_mappers(
         in_memory_data_to_return.merge(r["files"])
         mappers_request_times.append(r["request_time"])
         mappers_simulation_times.append(r["simulation_time"])
-    return in_memory_data_to_return, map_time, mappers_request_times, mappers_simulation_times
+    return (
+        in_memory_data_to_return,
+        map_time,
+        mappers_request_times,
+        mappers_simulation_times,
+    )

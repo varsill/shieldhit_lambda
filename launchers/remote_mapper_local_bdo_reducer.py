@@ -1,25 +1,13 @@
+import lzma
 import os
 import shutil
-from common import (
-    meassure_time,
-    execute_concurrently,
-    load_hdf_result_file,
-    separate_results,
-)
 from typing import Dict
-import h5py
-import lzma
-import functools
-from common import meassure_time
-from converters import Converters
-import glob
+
 from datatypes.filesystem import FilesystemBinary
-from workers.local_bdo_reducer import launch_worker as launch_local_bdo_reducer
-from workers.common.remote_mapper_invocation_api import (
-    resolve_remote_mapper,
-)
-from workers.common.remote import RemoteEnvironment
 from launchers.common import prepare_multiple_remote_mappers_function
+from workers.common.remote import RemoteEnvironment
+from workers.common.remote_mapper_invocation_api import resolve_remote_mapper
+from workers.local_bdo_reducer import launch_worker as launch_local_bdo_reducer
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
@@ -27,6 +15,7 @@ FINAL_RESULTS = "results/final"
 SHOULD_MAPPER_PRODUCE_HDF = False
 OPERATION = "hdf"
 LAUNCH_NAME = "remote_local_bdo"
+
 
 def launch_test(
     how_many_samples: int,
@@ -56,7 +45,12 @@ def launch_test(
     )
     # mapping
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
-    in_memory_mapper_results, map_time, mappers_request_times, mappers_simulation_times = launch_multiple_mappers(
+    (
+        in_memory_mapper_results,
+        map_time,
+        mappers_request_times,
+        mappers_simulation_times,
+    ) = launch_multiple_mappers(
         how_many_samples,
         how_many_mappers,
         dat_files,
@@ -73,8 +67,10 @@ def launch_test(
 
     # update metrics
     try:
-        metrics["hdf_results"] = reducer_filesystem_result.to_memory().read("z_profile_.h5")
-    except Exception as e:
+        metrics["hdf_results"] = reducer_filesystem_result.to_memory().read(
+            "z_profile_.h5"
+        )
+    except Exception:
         pass
     metrics["map_time"] = map_time
     metrics["mappers_request_times"] = mappers_request_times

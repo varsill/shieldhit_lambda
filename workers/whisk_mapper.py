@@ -1,5 +1,8 @@
 import os
+
 from datatypes.in_memory import InMemoryBinary
+from workers.common.remote_mapper_invocation_api import \
+    send_request_to_remote_mapper
 
 
 def launch_worker(
@@ -9,9 +12,6 @@ def launch_worker(
     should_produce_hdf: bool,
     save_to: str,
 ):
-    from workers.common.remote_mapper_invocation_api import (
-        send_request_to_remote_mapper,
-    )
 
     try:
         return send_request_to_remote_mapper(

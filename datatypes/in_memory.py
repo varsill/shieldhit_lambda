@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from converters import Converters
-import glob
-from typing import Dict, Any
-from common import mktemp
+from typing import Any, Dict
 
 import h5py
+
+from common import mktemp
+from converters import Converters
+from datatypes.filesystem import FilesystemBinary, FilesystemHDF
 
 
 @dataclass
@@ -13,7 +14,6 @@ class InMemoryBinary:
     transform: Any = None
 
     def to_filesystem(self, output_dir, use_memfd=False):
-        from datatypes.filesystem import FilesystemBinary
 
         Converters.map_to_files(self.files_map, output_dir, self.transform, use_memfd)
         return FilesystemBinary(output_dir)
@@ -40,7 +40,6 @@ class InMemoryHDF:
     files_map: Dict
 
     def to_filesystem(self, output_dir):
-        from datatypes.filesystem import FilesystemHDF
 
         for filename in self.files_map.keys():
             with h5py.File(f"{output_dir}/{filename}", "w") as f:
