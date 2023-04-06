@@ -166,6 +166,7 @@ def launch_test(
         cumulative_hdf_reduce_time+=hdf_reducer_time
         if "z_profile.h5" in reducer_in_memory_results.files_map:
             metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")
+        reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
     
     # update metrics
     metrics["hdf_reduce_time"] = cumulative_hdf_reduce_time

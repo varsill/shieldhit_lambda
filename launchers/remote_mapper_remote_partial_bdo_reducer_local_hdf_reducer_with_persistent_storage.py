@@ -66,8 +66,9 @@ def mapper_and_bdo_reducer(
             worker_id, how_many_samples, dat_files, should_produce_hdf, save_to=save_to
         )
         number_of_files_produced_by_me = len(result["files"].read_all().keys())
+        
         with lock:
-            if int(len(results_map.keys()) / number_of_files_produced_by_me) == REDUCE_WHEN:
+            if int((len(results_map.keys())+number_of_files_produced_by_me) / number_of_files_produced_by_me) == REDUCE_WHEN:
                 left_in_memory_results_map = {}
                 for key, value in results_map.items():
                     left_in_memory_results_map[key] = value
@@ -165,6 +166,7 @@ def launch_test(
     print(f"SUCCESS/ALL: {number_of_ok_results}/{number_of_all_results}")
 
     separate_results(TEMPORARY_RESULTS, TEMPORARY_RESULTS)
+
     cumulative_hdf_reduce_time = 0
     for subdir in glob.glob(f"{TEMPORARY_RESULTS}/*"):
         mapper_and_reducer_in_filesystem_results = FilesystemBinary(
@@ -176,6 +178,7 @@ def launch_test(
         cumulative_hdf_reduce_time+=hdf_reducer_time
         if "z_profile.h5" in reducer_in_memory_results.files_map:
             metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")
+        reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
    
     # update metrics
     metrics["hdf_reduce_time"] = cumulative_hdf_reduce_time
