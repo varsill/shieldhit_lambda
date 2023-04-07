@@ -25,26 +25,27 @@ parser.add_argument("-t", "--title", default="")
 subparsers = parser.add_subparsers(title="operation", dest="operation")
 
 histogram_parser = subparsers.add_parser("histogram")
-histogram_parser.add_argument("-m", "--metric", default="mappers_simulation_times")
+histogram_parser.add_argument("-m", "--metric", default="workers_request_times.simulate")
 histogram_parser.add_argument("--group_by_param_value", default=100)
 
 success_ratio_parser = subparsers.add_parser("success_ratio")
+success_ratio_parser.add_argument("-w", "--worker", default="simulate")
 
-simulation_to_request_parser = subparsers.add_parser("simulation_to_request")
-simulation_to_request_parser.add_argument("-w", "--workers", default="mappers")
+execution_and_request_parser = subparsers.add_parser("execution_and_request")
+execution_and_request_parser.add_argument("-w", "--worker", default="simulate")
 
-simulation_request_ratio_parser = subparsers.add_parser("simulation_request_ratio")
-simulation_request_ratio_parser.add_argument("-w", "--workers", default="mappers")
+execution_to_request_ratio_parser = subparsers.add_parser("execution_to_request_ratio")
+execution_to_request_ratio_parser.add_argument("-w", "--worker", default="simulate")
 
-times_parser = subparsers.add_parser("times")
-times_parser.add_argument(
-    "-f", "--fields", default="map_time,reduce_time,total_duration"
+phases_makespan_parser = subparsers.add_parser("phases_makespan")
+phases_makespan_parser.add_argument(
+    "-p", "--phases", default="total"
 )
 
 distribution_parser = subparsers.add_parser("distribution")
 
-cumulative_times_parser = subparsers.add_parser("cumulative_times")
-cumulative_times_parser.add_argument("-w", "--workers", default="mappers")
+cumulative_times_parser = subparsers.add_parser("cumulative_workers_times")
+cumulative_times_parser.add_argument("-w", "--worker", default="simulate")
 
 speedup_parser = subparsers.add_parser("speedup")
 
@@ -58,6 +59,7 @@ filename_without_extension, _extension = os.path.splitext(filename)
 plot_filename = f"{args.output}/{filename_without_extension}_{operation}.png"
 
 input_results_dump = pd.json_normalize(input_results_dump)
+
 limit = args.limit.split(",")
 lower_limit = int(limit[0])
 upper_limit = int(limit[1])
@@ -67,6 +69,7 @@ input_results_dump = input_results_dump[
 input_results_dump = input_results_dump[
     input_results_dump[f"params.{args.group_by_param}"] < upper_limit
 ]
+
 args.title = "\n".join(wrap(args.title))
 if operation == "histogram":
     plot_request_times_histogram(
@@ -74,40 +77,40 @@ if operation == "histogram":
         args.group_by_param,
         plot_filename,
         metric=args.metric,
-        group_by_param_value=args.group_by_param_value,
+        group_by_param_value=int(args.group_by_param_value),
         title=args.title,
     )
 
-elif operation == "simulation_to_request":
-    plot_simulation_time_to_request_time_vs_param(
+elif operation == "execution_and_request":
+    plot_execution_time_to_request_time_vs_param(
         input_results_dump,
         args.group_by_param,
         plot_filename,
-        workers=args.workers,
+        worker=args.worker,
         title=args.title,
     )
 
 elif operation == "success_ratio":
     plot_percentage_of_successfull_responses(
-        input_results_dump, args.group_by_param, plot_filename, title=args.title
+        input_results_dump, args.group_by_param, plot_filename, worker=args.worker, title=args.title
     )
 
-elif operation == "simulation_request_ratio":
-    plot_simulation_time_and_request_time_ratio_vs_param(
+elif operation == "execution_to_request_ratio":
+    plot_execution_time_and_request_time_ratio_vs_param(
         input_results_dump,
         args.group_by_param,
         plot_filename,
-        workers=args.workers,
+        worker=args.worker,
         title=args.title,
     )
 
-elif operation == "times":
-    fields_list = args.fields.split(",")
-    plot_map_reduce_total_time_vs_params(
+elif operation == "phases_makespan":
+    phases_list = args.phases.split(",")
+    plot_phases_makespan_vs_params(
         input_results_dump,
         args.group_by_param,
         plot_filename,
-        fields_list,
+        phases_list,
         title=args.title,
     )
 
@@ -116,12 +119,12 @@ elif operation == "distribution":
         input_results_dump, args.group_by_param, plot_filename, title=args.title
     )
 
-elif operation == "cumulative_times":
+elif operation == "cumulative_workers_times":
     plot_cumulative_time_vs_params(
         input_results_dump,
         args.group_by_param,
         plot_filename,
-        workers=args.workers,
+        worker=args.worker,
         title=args.title,
     )
 
