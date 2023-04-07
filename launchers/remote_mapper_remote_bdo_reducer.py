@@ -14,7 +14,6 @@ from workers.common.remote_reducer_invocation_api import resolve_remote_reducer
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
-SHOULD_MAPPER_PRODUCE_HDF = False
 LAUNCH_NAME = "remote_remote_bdo"
 
 def get_default_value_for_metrics_dict():
@@ -60,7 +59,7 @@ def launch_test(
         how_many_samples,
         how_many_mappers,
         dat_files,
-        SHOULD_MAPPER_PRODUCE_HDF,
+        False,
         save_to="download",
     )
     # reducing

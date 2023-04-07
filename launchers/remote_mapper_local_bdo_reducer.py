@@ -14,8 +14,7 @@ from workers.local_bdo_reducer import launch_worker as launch_local_bdo_reducer
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
-SHOULD_MAPPER_PRODUCE_HDF = False
-LAUNCH_NAME = "remote_local_bdo"
+LAUNCH_NAME = "remote_local"
 
 def get_default_value_for_metrics_dict():
     return {}
@@ -58,7 +57,7 @@ def launch_test(
         how_many_samples,
         how_many_mappers,
         dat_files,
-        SHOULD_MAPPER_PRODUCE_HDF,
+        False,
         save_to="download",
     )
     mapper_filesystem_binary_results = in_memory_mapper_results.to_filesystem(

@@ -20,7 +20,6 @@ from workers.local_hdf_reducer import launch_worker as launch_local_hdf_reducer
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
-SHOULD_MAPPER_PRODUCE_HDF = False
 REDUCE_WHEN = 5
 WHISK_VOLUME = "/net/people/plgrid/plgvarsill/persistent_volume"
 LAUNCH_NAME = f"remote_remote_bdo_{REDUCE_WHEN}_persistent_local_hdf"
@@ -149,7 +148,7 @@ def launch_test(
             launch_reducer=launch_reducer,
             how_many_samples=how_many_samples_per_mapper,
             dat_files=dat_files,
-            should_produce_hdf=SHOULD_MAPPER_PRODUCE_HDF,
+            should_produce_hdf=False,
             results_map=shared_results_map,
             tmp_dir=TEMPORARY_RESULTS,
             save_to=save_to,
