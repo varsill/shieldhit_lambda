@@ -20,7 +20,6 @@ INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 SHOULD_MAPPER_PRODUCE_HDF = False
-OPERATION = "hdf"
 REDUCE_WHEN = 5
 LAUNCH_NAME = f"remote_remote_bdo_{REDUCE_WHEN}_local_hdf"
 

@@ -13,7 +13,6 @@ from workers.common.remote import RemoteEnvironment
 INPUT_FILES_DIR = "input"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
-OPERATION = "hdf"
 LAUNCH_NAME = "local_local"
 
 
@@ -53,7 +52,7 @@ def launch_test(
     # reducing
     _reducer_results, reduce_time = meassure_time(
         lambda: subprocess.check_output(
-            f"./binaries/convertmc {OPERATION} --many '{TEMPORARY_RESULTS}/*.bdo' {TEMPORARY_RESULTS}",
+            f"./binaries/convertmc hdf --many '{TEMPORARY_RESULTS}/*.bdo' {TEMPORARY_RESULTS}",
             shell=True,
         )
     )

@@ -15,7 +15,6 @@ INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 SHOULD_MAPPER_PRODUCE_HDF = True
-OPERATION = "hdf"
 LAUNCH_NAME = "remote_local_hdf"
 
 def get_default_value_for_metrics_dict():

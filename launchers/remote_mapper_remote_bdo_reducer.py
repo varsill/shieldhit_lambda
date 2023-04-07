@@ -15,7 +15,6 @@ INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 SHOULD_MAPPER_PRODUCE_HDF = False
-OPERATION = "hdf"
 LAUNCH_NAME = "remote_remote_bdo"
 
 def get_default_value_for_metrics_dict():
@@ -69,7 +68,7 @@ def launch_test(
         reducer_in_memory_results,
         reducer_simulation_time,
         reducer_request_time,
-    ) = launch_reducer(in_memory_mapper_results, OPERATION, get_from="uploaded")
+    ) = launch_reducer(in_memory_mapper_results, "hdf", get_from="uploaded")
 
     reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
     total_duration = time.time()-start_time
