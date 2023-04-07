@@ -7,9 +7,10 @@ import shutil
 import time
 from multiprocessing import Pool
 from typing import Dict
+from collections import defaultdict
 
 from common import separate_results
-from datatypes.filesystem import FilesystemBinary
+from datatypes.filesystem import FilesystemBinary, FilesystemHDF
 from workers.common.remote import RemoteEnvironment
 from workers.common.remote_mapper_invocation_api import resolve_remote_mapper
 from workers.common.remote_reducer_invocation_api import resolve_remote_reducer
@@ -65,7 +66,7 @@ def mapper_and_bdo_reducer(
             else:
                 return {
                     "status": "OK",
-                    "type": "JUST_MAPPER",
+                    "type": "JUST_SIMULATE",
                     "mapper_request_time": result["request_time"],
                     "mapper_simulation_time": result["simulation_time"],
                 }
@@ -82,7 +83,7 @@ def mapper_and_bdo_reducer(
         reducer_in_filesystem_results = reducer_in_memory_results.to_filesystem(tmp_dir)
         return {
             "status": "OK",
-            "type": "MAPPER_AND_REDUCER",
+            "type": "MAP_EXTRACT_REDUCE",
             "results": reducer_in_filesystem_results,
             "mapper_request_time": result["request_time"],
             "mapper_simulation_time": result["simulation_time"],
@@ -92,6 +93,8 @@ def mapper_and_bdo_reducer(
     except Exception:
         return {"status": "ERROR"}
 
+def get_default_value_for_metrics_dict():
+    return {}
 
 def launch_test(
     how_many_samples: int,
@@ -112,7 +115,7 @@ def launch_test(
     """
 
     # initial preparation
-    metrics = {}
+    metrics = defaultdict(get_default_value_for_metrics_dict)
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
     launch_single_mapper = resolve_remote_mapper(faas_environment)
@@ -120,10 +123,11 @@ def launch_test(
     how_many_samples_per_mapper = int(how_many_samples / how_many_mappers)
 
     # mapping and partial reducing
+    start_time = time.time()
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
     m = multiprocessing.Manager()
     lock = m.Lock()
-    start_time = time.time()
+    
     with Pool(processes=how_many_mappers) as pool:
         concurrent_function = functools.partial(
             mapper_and_bdo_reducer,
@@ -145,9 +149,7 @@ def launch_test(
     results = [r for r in results if r["status"] == "OK"]
     number_of_ok_results = len(results)
     print(f"SUCCESS/ALL: {number_of_ok_results}/{number_of_all_results}")
-    # mapper_and_reducer_in_filesystem_results = FilesystemBinary(
-    #     TEMPORARY_RESULTS, "*.h5"
-    # )
+
     separate_results(TEMPORARY_RESULTS, TEMPORARY_RESULTS)
     cumulative_hdf_reduce_time = 0
     for subdir in glob.glob(f"{TEMPORARY_RESULTS}/*"):
@@ -156,29 +158,33 @@ def launch_test(
             mapper_and_reducer_in_filesystem_results
         )
         cumulative_hdf_reduce_time += hdf_reducer_time
-        if "z_profile.h5" in reducer_in_memory_results.files_map:
-            metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")
         reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
 
+    total_duration = time.time()-start_time
+
     # update metrics
-    metrics["hdf_reduce_time"] = cumulative_hdf_reduce_time
-    metrics["mapper_and_bdo_reducer_time"] = mapper_and_bdo_reducer_time
-    metrics["mappers_request_times"] = [r["mapper_request_time"] for r in results]
-    metrics["mappers_simulation_times"] = [r["mapper_simulation_time"] for r in results]
-    metrics["bdo_reducers_request_times"] = [
-        r["bdo_reducer_request_time"]
-        for r in results
-        if r["type"] == "MAPPER_AND_REDUCER"
-    ]
-    metrics["bdo_reducers_simulation_times"] = [
-        r["bdo_reducer_simulation_time"]
-        for r in results
-        if r["type"] == "MAPPER_AND_REDUCER"
-    ]
-    metrics["map_time"] = None
-    metrics["reduce_time"] = None
+    metrics["phases"] = ["simulating_extracting_and_partially_reducing", "final_reducing"]
+    
+    metrics["number_of_workers"]["simulate"] = how_many_mappers
+    metrics["number_of_workers"]["extract_and_partially_reduce"] = int(how_many_mappers/REDUCE_WHEN)
+    metrics["number_of_workers"]["final_reduce"] = 1
+    
+    metrics["workers_request_times"]["simulate"] = [r["mapper_request_time"] for r in results]
+    metrics["workers_request_times"]["extract_and_partially_reduce"] = [r["bdo_reducer_request_time"] for r in results if r["type"] == "MAP_EXTRACT_REDUCE"]
+    metrics["workers_request_times"]["final_reduce"] = [cumulative_hdf_reduce_time]
+
+    metrics["workers_execution_times"]["simulate"] = [r["mapper_simulation_time"] for r in results]
+    metrics["workers_execution_times"]["extract_and_partially_reduce"] = [r["bdo_reducer_simulation_time"] for r in results if r["type"] == "MAP_EXTRACT_REDUCE"]
+    metrics["workers_execution_times"]["final_reduce"] = [cumulative_hdf_reduce_time]
+    
+    metrics["makespan"]["simulating_extracting_and_partially_reducing"] = mapper_and_bdo_reducer_time
+    metrics["makespan"]["final_reducing"] = cumulative_hdf_reduce_time
+    metrics["makespan"]["total"] = total_duration
+
+    metrics["hdf_results"] = FilesystemHDF(FINAL_RESULTS).to_memory().read("z_profile.h5")
+
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)
     shutil.rmtree(FINAL_RESULTS)
 
-    return metrics
+    return dict(metrics)

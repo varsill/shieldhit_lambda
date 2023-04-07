@@ -2,8 +2,10 @@ import lzma
 import os
 import shutil
 from typing import Dict
+from collections import defaultdict
+import time
 
-from datatypes.filesystem import FilesystemBinary
+from datatypes.filesystem import FilesystemBinary, FilesystemHDF
 from launchers.common import prepare_multiple_remote_mappers_function
 from workers.common.remote import RemoteEnvironment
 from workers.common.remote_mapper_invocation_api import resolve_remote_mapper
@@ -16,6 +18,8 @@ SHOULD_MAPPER_PRODUCE_HDF = True
 OPERATION = "hdf"
 LAUNCH_NAME = "remote_local_hdf"
 
+def get_default_value_for_metrics_dict():
+    return {}
 
 def launch_test(
     how_many_samples: int,
@@ -36,14 +40,16 @@ def launch_test(
     """
 
     # initial preparation
-    metrics = {}
+    metrics = defaultdict(get_default_value_for_metrics_dict)
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
     launch_single_mapper = resolve_remote_mapper(faas_environment)
     launch_multiple_mappers = prepare_multiple_remote_mappers_function(
         launch_single_mapper
     )
+
     # mapping
+    start_time = time.time()
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
     (
         in_memory_mapper_results,
@@ -65,14 +71,26 @@ def launch_test(
         mapper_filesystem_hdf_results
     )
     reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
+    total_duration = time.time() - start_time
     # update metrics
-    metrics["hdf_results"] = reducer_in_memory_results.read("z_profile.h5")
-    metrics["map_time"] = map_time
-    metrics["mappers_request_times"] = mappers_request_times
-    metrics["mappers_simulation_times"] = mappers_simulation_times
-    metrics["reduce_time"] = reduce_time
+    metrics["phases"] = ["simulating_and_extracting", "reducing"]
+    
+    metrics["number_of_workers"]["simulate_and_extract"] = how_many_mappers
+    metrics["number_of_workers"]["reduce"] = 1
+    
+    metrics["workers_request_times"]["simulate_and_extract"] = mappers_request_times
+    metrics["workers_request_times"]["reduce"] = [reduce_time]
+
+    metrics["workers_execution_times"]["simulate_and_extract"] = mappers_simulation_times
+    metrics["workers_execution_times"]["reduce"] = [reduce_time]
+
+    metrics["makespan"]["simulating_and_extracting"] = map_time
+    metrics["makespan"]["reducing"] = reduce_time
+    metrics["makespan"]["total"] = total_duration
+
+    metrics["hdf_results"] = FilesystemHDF(FINAL_RESULTS).to_memory().read("z_profile.h5")
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)
     shutil.rmtree(FINAL_RESULTS)
-    return metrics
+    return dict(metrics)

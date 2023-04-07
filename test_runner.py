@@ -1,18 +1,16 @@
-from launchers.remote_mapper_remote_partial_bdo_reducer_local_hdf_reducer_with_persistent_storage import launch_test, LAUNCH_NAME
-from common import meassure_time
+from launchers.remote_mapper_remote_bdo_reducer import launch_test, LAUNCH_NAME
 import pickle
 import shutil
-import numpy as np
-import os
 import subprocess
 import traceback
 
 TEST_RUNNER_POSTFIX="10_workers_1000_samples"
 METRICS_RESULT_BASE_PATH = "/home/ubuntu/backup/lambda_results"
 FAAS_ENVIRONMENT = "aws"
-HOW_MANY_TRIES = 1
+HOW_MANY_TRIES = 3
 
 TEST_CASES = [
+    {"number_of_workers": 5, "number_of_samples": 1000},
     {"number_of_workers": 10, "number_of_samples": 1000},
     # {"number_of_workers": 70, "number_of_samples": 1000000},
     # {"number_of_workers": 80, "number_of_samples": 1000000},
@@ -44,17 +42,14 @@ if __name__ == "__main__":
     for test_case_params in TEST_CASES:
         for try_number in range(HOW_MANY_TRIES):
             try:
-                metrics, duration = meassure_time(
-                    lambda: launch_test(
+                metrics = launch_test(
                         how_many_samples=test_case_params["number_of_samples"],
                         how_many_mappers=test_case_params["number_of_workers"],
                         faas_environment=FAAS_ENVIRONMENT,
                     )
-                )
-                metrics["total_duration"] = duration
-                print("total_duration", metrics["total_duration"])
-                print("map_time", metrics["map_time"])
-                print("reduce_time", metrics["reduce_time"])
+                # print("total_duration", metrics["total_duration"])
+                # print("map_time", metrics["map_time"])
+                # print("reduce_time", metrics["reduce_time"])
                 test_instance = {
                     "params": test_case_params,
                     "metrics": metrics,

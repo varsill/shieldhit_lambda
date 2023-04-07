@@ -32,8 +32,8 @@ def plot_request_times_histogram(
         results.groupby(f"params.{group_by_param}").agg(agregator).reset_index()
     )
     
-    all_request_times = results_avg[f"metrics.{metric}"].tolist()[0]
-    plt.hist(all_request_times)
+    all_times = results_avg[f"metrics.{metric}"].tolist()[0]
+    plt.hist(all_times)
     plt.xlabel("Request time [s]")
     plt.ylabel(f"Number of occurences")
     plt.title(title)
@@ -211,10 +211,9 @@ def plot_cumulative_time_vs_params(
     plt.savefig(plot_filename)
 
 
-def plot_speedup(input_results_dump, group_by_param, plot_filename, title):
-    ONE_PROCESS_TIME = 2000
+def plot_speedup(input_results_dump, group_by_param, plot_filename, phase, phase_with_single_worker_duration, title):
     input_results_dump["speedup"] = input_results_dump.apply(
-        lambda row: ONE_PROCESS_TIME / (row[f"metrics.total_duration"] - 4), axis=1
+        lambda row: phase_with_single_worker_duration / (row[f"metrics.makespan.{phase}"]), axis=1
     )
     results_avg = (
         input_results_dump.groupby(f"params.{group_by_param}")
@@ -236,6 +235,6 @@ def plot_speedup(input_results_dump, group_by_param, plot_filename, title):
 
     plt.legend()
     plt.xlabel(f"{group_by_param}")
-    plt.ylabel("Speedup")
+    plt.ylabel(f"Speedup of phase: {phase}")
     plt.title(title)
     plt.savefig(plot_filename)

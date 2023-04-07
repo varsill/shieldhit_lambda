@@ -48,7 +48,8 @@ cumulative_times_parser = subparsers.add_parser("cumulative_workers_times")
 cumulative_times_parser.add_argument("-w", "--worker", default="simulate")
 
 speedup_parser = subparsers.add_parser("speedup")
-
+speedup_parser.add_argument("-p", "--phase", default="simulating")
+speedup_parser.add_argument("--phase_with_single_worker_duration", default=1)
 
 args = parser.parse_args()
 operation = args.operation
@@ -130,5 +131,5 @@ elif operation == "cumulative_workers_times":
 
 elif operation == "speedup":
     plot_speedup(
-        input_results_dump, args.group_by_param, plot_filename, title=args.title
+        input_results_dump, args.group_by_param, plot_filename, args.phase, int(args.phase_with_single_worker_duration), title=args.title
     )
