@@ -2,17 +2,6 @@ import functools
 
 import matplotlib.pyplot as plt
 
-RESULTS_BASE_PATH = "/home/ubuntu/backup/lambda_results"
-FILENAME = "remote_local_bdo_whisk_60-200_workers_100k_samples"
-RESULTS_DUMP_FILE = f"{RESULTS_BASE_PATH}/{FILENAME}.dump"
-GROUP_BY_PARAM = "number_of_workers"
-# to_plot = results.filter(axis="columns", items=["test_run_number", "params.number_of_workers"])
-# print(results.iloc[0])
-# results_std = results.groupby("params.number_of_workers").std(
-#     ["results.map_time", "results.reduce_time", "results.total_duration"]
-# )
-
-
 def _agregate_times(column, metric):
     if column.name != f"metrics.{metric}":
         return None

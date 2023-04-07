@@ -5,7 +5,7 @@ import pandas as pd
 
 RESULTS_DUMP_FILE = "emergency.dump"
 PLOT_FILE = "DISTRIBUTION.png"
-GROUP_BY_PARAM = "number_of_workers"
+GROUP_BY_PARAM = "how_many_mappers"
 
 
 def __load_hdf(file_path):

@@ -3,53 +3,32 @@ import pickle
 import shutil
 import subprocess
 import traceback
+import itertools
 
 TEST_RUNNER_POSTFIX="10_workers_1000_samples"
 METRICS_RESULT_BASE_PATH = "/home/ubuntu/backup/lambda_results"
 FAAS_ENVIRONMENT = "aws"
 HOW_MANY_TRIES = 3
 
-TEST_CASES = [
-    {"number_of_workers": 5, "number_of_samples": 1000},
-    {"number_of_workers": 10, "number_of_samples": 1000},
-    # {"number_of_workers": 70, "number_of_samples": 1000000},
-    # {"number_of_workers": 80, "number_of_samples": 1000000},
-    # {"number_of_workers": 90, "number_of_samples": 1000000},
-    # {"number_of_workers": 100, "number_of_samples": 1000000},
-    # {"number_of_workers": 120, "number_of_samples": 1000000},
-    # {"number_of_workers": 140, "number_of_samples": 1000000},
-    # {"number_of_workers": 160, "number_of_samples": 1000000},
-    # {"number_of_workers": 180, "number_of_samples": 1000000},
-    # {"number_of_workers": 200, "number_of_samples": 1000000},
-    # {"number_of_workers": 230, "number_of_samples": 1000000},
-    # {"number_of_workers": 260, "number_of_samples": 1000000},
-    # {"number_of_workers": 300, "number_of_samples": 1000000},
-    # {"number_of_workers": 330, "number_of_samples": 1000000},
-    # {"number_of_workers": 360, "number_of_samples": 1000000},
-    # {"number_of_workers": 260, "number_of_samples": 1000000},
-    # {"number_of_workers": 280, "number_of_samples": 1000000},
-    # {"number_of_workers": 300, "number_of_samples": 1000000},
-    # {"number_of_workers": 320, "number_of_samples": 1000000},
-    # {"number_of_workers": 340, "number_of_samples": 1000000},
-    # {"number_of_workers": 360, "number_of_samples": 1000000},
-]
-# TEST_CASES.reverse()
+def prepare_test_cases(params_dict):
+    params_dict_with_enumerable_values = {key: (value if (isinstance(value, range) or isinstance(value, list)) else [value]) for key, value in params_dict.items()}
+    results_list = []
+    for combination in itertools.product(*list(params_dict_with_enumerable_values.values())):
+        new_result = {param_name: param_value for param_name, param_value in zip(params_dict_with_enumerable_values.keys(), combination)}
+        results_list.append(new_result)
+    return results_list
+        
+TEST_CASES = {"how_many_mappers": range(1, 10), "how_many_samples": 1000, "reduce_when": 1, "faas_environment": FAAS_ENVIRONMENT}
 
 if __name__ == "__main__":
     filename = f"{LAUNCH_NAME}_{FAAS_ENVIRONMENT}_{TEST_RUNNER_POSTFIX}"
     print(f"{METRICS_RESULT_BASE_PATH}/{filename}.dump")
     test_results = []
-    for test_case_params in TEST_CASES:
+    for test_case_params in prepare_test_cases(TEST_CASES):
         for try_number in range(HOW_MANY_TRIES):
             try:
-                metrics = launch_test(
-                        how_many_samples=test_case_params["number_of_samples"],
-                        how_many_mappers=test_case_params["number_of_workers"],
-                        faas_environment=FAAS_ENVIRONMENT,
-                    )
-                # print("total_duration", metrics["total_duration"])
-                # print("map_time", metrics["map_time"])
-                # print("reduce_time", metrics["reduce_time"])
+                metrics = launch_test(**test_case_params)
+
                 test_instance = {
                     "params": test_case_params,
                     "metrics": metrics,

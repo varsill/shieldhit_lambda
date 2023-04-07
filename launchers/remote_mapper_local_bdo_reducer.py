@@ -20,9 +20,10 @@ def get_default_value_for_metrics_dict():
     return {}
 
 def launch_test(
-    how_many_samples: int,
-    how_many_mappers: int,
-    faas_environment: RemoteEnvironment,
+    how_many_samples: int=None,
+    how_many_mappers: int=None,
+    faas_environment: RemoteEnvironment=None,
+    **_rest_of_args
 ) -> Dict:
     """
     A function that runs a given test case.

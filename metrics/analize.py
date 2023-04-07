@@ -17,7 +17,7 @@ def load(input_file_path):
 
 parser = argparse.ArgumentParser(description="Analyze .dump files.")
 parser.add_argument("input")
-parser.add_argument("-g", "--group_by_param", default="number_of_workers")
+parser.add_argument("-g", "--group_by_param", default="how_many_mappers")
 parser.add_argument("-o", "--output", default="./")
 parser.add_argument("-l", "--limit", default="0,500")
 parser.add_argument("-t", "--title", default="")
@@ -72,6 +72,8 @@ input_results_dump = input_results_dump[
 ]
 
 args.title = "\n".join(wrap(args.title))
+
+print(f"SAVING TO: {plot_filename}")
 if operation == "histogram":
     plot_request_times_histogram(
         input_results_dump,

@@ -16,7 +16,7 @@ FINAL_RESULTS = "results/final"
 LAUNCH_NAME = "local_local"
 
 
-def launch_mapper(mapper_id, how_many_samples_per_mapper):
+def launch_mapper(mapper_id, how_many_samples_per_mapper, **_rest_of_args):
     _mapping_result, worker_time = meassure_time(
         lambda: subprocess.check_output(
             f"./binaries/shieldhit -n {how_many_samples_per_mapper} -N {mapper_id} {TEMPORARY_RESULTS}",
@@ -29,9 +29,9 @@ def get_default_value_for_metrics_dict():
     return {}
 
 def launch_test(
-    how_many_samples: int,
-    how_many_mappers: int,
-    faas_environment: RemoteEnvironment,
+    how_many_samples: int=None,
+    how_many_mappers: int=None,
+    **_rest_of_args,
 ) -> Dict:
     # initial preparation
     metrics = defaultdict(get_default_value_for_metrics_dict)

@@ -19,8 +19,7 @@ from workers.local_hdf_reducer import launch_worker as launch_local_hdf_reducer
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
-REDUCE_WHEN = 5
-LAUNCH_NAME = f"remote_remote_bdo_{REDUCE_WHEN}_local_hdf"
+LAUNCH_NAME = f"remote_remote_bdo_local_hdf"
 
 
 def mapper_and_bdo_reducer(
@@ -95,9 +94,11 @@ def get_default_value_for_metrics_dict():
     return {}
 
 def launch_test(
-    how_many_samples: int,
-    how_many_mappers: int,
-    faas_environment: RemoteEnvironment,
+    how_many_samples: int=None,
+    how_many_mappers: int=None,
+    faas_environment: RemoteEnvironment=None,
+    reduce_when: int=None,
+    **_rest_of_args
 ) -> Dict:
     """
     A function that runs a given test case.
@@ -136,7 +137,7 @@ def launch_test(
             dat_files=dat_files,
             should_produce_hdf=False,
             tmp_dir=TEMPORARY_RESULTS,
-            reduce_when=REDUCE_WHEN,
+            reduce_when=reduce_when,
         )
         results = pool.map_async(concurrent_function, range(how_many_mappers))
         results.wait()
@@ -164,7 +165,7 @@ def launch_test(
     metrics["phases"] = ["simulating_extracting_and_partially_reducing", "final_reducing"]
     
     metrics["number_of_workers"]["simulate"] = how_many_mappers
-    metrics["number_of_workers"]["extract_and_partially_reduce"] = int(how_many_mappers/REDUCE_WHEN)
+    metrics["number_of_workers"]["extract_and_partially_reduce"] = int(how_many_mappers/reduce_when)
     metrics["number_of_workers"]["final_reduce"] = 1
     
     metrics["workers_request_times"]["simulate"] = [r["mapper_request_time"] for r in results]

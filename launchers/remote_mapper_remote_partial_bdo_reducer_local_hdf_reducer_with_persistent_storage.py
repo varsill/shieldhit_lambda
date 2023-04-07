@@ -20,9 +20,8 @@ from workers.local_hdf_reducer import launch_worker as launch_local_hdf_reducer
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
-REDUCE_WHEN = 5
 WHISK_VOLUME = "/net/people/plgrid/plgvarsill/persistent_volume"
-LAUNCH_NAME = f"remote_remote_bdo_{REDUCE_WHEN}_persistent_local_hdf"
+LAUNCH_NAME = f"remote_remote_bdo_persistent_local_hdf"
 
 
 def resolve_persistent_storage(faas_environment):
@@ -46,6 +45,7 @@ def mapper_and_bdo_reducer(
     tmp_dir,
     save_to,
     get_from,
+    reduce_when
 ):
     try:
         result = launch_single_mapper(
@@ -59,7 +59,7 @@ def mapper_and_bdo_reducer(
                     (len(results_map.keys()) + number_of_files_produced_by_me)
                     / number_of_files_produced_by_me
                 )
-                == REDUCE_WHEN
+                == reduce_when
             ):
                 left_in_memory_results_map = {}
                 for key, value in results_map.items():
@@ -107,9 +107,11 @@ def get_default_value_for_metrics_dict():
     return {}
 
 def launch_test(
-    how_many_samples: int,
-    how_many_mappers: int,
-    faas_environment: RemoteEnvironment,
+    how_many_samples: int=None,
+    how_many_mappers: int=None,
+    faas_environment: RemoteEnvironment=None,
+    reduce_when: int=None,
+    **_rest_of_args
 ) -> Dict:
     """
     A function that runs a given test case.
@@ -153,6 +155,7 @@ def launch_test(
             tmp_dir=TEMPORARY_RESULTS,
             save_to=save_to,
             get_from=get_from,
+            reduce_when=reduce_when
         )
         results = pool.map_async(concurrent_function, range(how_many_mappers))
         results.wait()
@@ -180,7 +183,7 @@ def launch_test(
     metrics["phases"] = ["simulating_extracting_and_partially_reducing", "final_reducing"]
     
     metrics["number_of_workers"]["simulate"] = how_many_mappers
-    metrics["number_of_workers"]["extract_and_partially_reduce"] = int(how_many_mappers/REDUCE_WHEN)
+    metrics["number_of_workers"]["extract_and_partially_reduce"] = int(how_many_mappers/reduce_when)
     metrics["number_of_workers"]["final_reduce"] = 1
     
     metrics["workers_request_times"]["simulate"] = [r["mapper_request_time"] for r in results]
