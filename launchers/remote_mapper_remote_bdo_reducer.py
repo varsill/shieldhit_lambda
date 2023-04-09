@@ -91,7 +91,7 @@ def launch_test(
 
     metrics["hdf_results"] = FilesystemHDF(FINAL_RESULTS).to_memory().read("z_profile_.h5")
     metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(FINAL_RESULTS)
-
+    print(metrics["mse"], metrics["how_many_results_not_delivered"])
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)
     shutil.rmtree(FINAL_RESULTS)

@@ -1,4 +1,4 @@
-from launchers.local_mapper_and_reducer import launch_test, LAUNCH_NAME
+from launchers.remote_mapper_remote_bdo_reducer import launch_test, LAUNCH_NAME
 import pickle
 import shutil
 import subprocess
@@ -44,11 +44,10 @@ if __name__ == "__main__":
                 shutil.rmtree("results/temporary")
                 continue
     try:
-        filename = f"{LAUNCH_NAME}_{FAAS_ENVIRONMENT}_{TEST_RUNNER_POSTFIX}"
         with open(f"{METRICS_RESULT_BASE_PATH}/{filename}.dump", "wb") as output_file:
             pickle.dump(test_results, output_file)
     except Exception as e:
         print("EMERGENCY DUMP", e)
         with open(f"emergency.dump", "wb") as output_file:
             pickle.dump(test_results, output_file)
-        subprocess.check_output(f"sudo mv emergency.dump {METRICS_RESULT_BASE_PATH}/{LAUNCH_NAME}_{FAAS_ENVIRONMENT}_{TEST_RUNNER_POSTFIX}.dump", shell=True)
+        subprocess.check_output(f"sudo mv emergency.dump {METRICS_RESULT_BASE_PATH}/{filename}.dump", shell=True)
