@@ -44,6 +44,8 @@ phases_makespan_parser.add_argument(
 
 distribution_parser = subparsers.add_parser("distribution")
 
+mse_parser = subparsers.add_parser("mse")
+
 cumulative_times_parser = subparsers.add_parser("cumulative_workers_times")
 cumulative_times_parser.add_argument("-w", "--worker", default="simulate")
 
@@ -119,6 +121,11 @@ elif operation == "phases_makespan":
 
 elif operation == "distribution":
     plot_distribution(
+        input_results_dump, args.group_by_param, plot_filename, title=args.title
+    )
+
+elif operation == "mse":
+    plot_mse(
         input_results_dump, args.group_by_param, plot_filename, title=args.title
     )
 

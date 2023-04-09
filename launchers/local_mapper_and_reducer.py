@@ -6,9 +6,8 @@ from typing import Dict
 import time
 from collections import defaultdict
 
-from common import execute_concurrently, meassure_time
+from common import execute_concurrently, meassure_time, distribution_metric
 from datatypes.filesystem import FilesystemHDF
-from workers.common.remote import RemoteEnvironment
 
 INPUT_FILES_DIR = "input"
 TEMPORARY_RESULTS = "results/temporary"
@@ -76,6 +75,7 @@ def launch_test(
     metrics["makespan"]["total"] = total_duration
 
     metrics["hdf_results"] = FilesystemHDF(FINAL_RESULTS).to_memory().read("z_profile_.h5")
+    metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(FINAL_RESULTS)
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)

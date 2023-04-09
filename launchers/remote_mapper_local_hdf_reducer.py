@@ -10,6 +10,7 @@ from launchers.common import prepare_multiple_remote_mappers_function
 from workers.common.remote import RemoteEnvironment
 from workers.common.remote_mapper_invocation_api import resolve_remote_mapper
 from workers.local_hdf_reducer import launch_worker as launch_local_hdf_reducer
+from common import distribution_metric
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
@@ -88,6 +89,7 @@ def launch_test(
     metrics["makespan"]["total"] = total_duration
 
     metrics["hdf_results"] = FilesystemHDF(FINAL_RESULTS).to_memory().read("z_profile.h5")
+    metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(FINAL_RESULTS)
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)

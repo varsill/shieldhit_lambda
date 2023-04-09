@@ -9,7 +9,7 @@ from multiprocessing import Manager, Pool
 from typing import Dict
 from collections import defaultdict
 
-from common import separate_results
+from common import separate_results, distribution_metric
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
 from datatypes.in_memory import InMemoryBinary
 from workers.common.remote import RemoteEnvironment
@@ -199,6 +199,7 @@ def launch_test(
     metrics["makespan"]["total"] = total_duration
 
     metrics["hdf_results"] = FilesystemHDF(FINAL_RESULTS).to_memory().read("z_profile.h5")
+    metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(FINAL_RESULTS)
     
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)

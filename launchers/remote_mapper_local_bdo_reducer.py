@@ -5,6 +5,8 @@ from typing import Dict
 from collections import defaultdict
 import time
 
+from common import distribution_metric
+
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
 from launchers.common import prepare_multiple_remote_mappers_function
 from workers.common.remote import RemoteEnvironment
@@ -88,6 +90,7 @@ def launch_test(
     metrics["makespan"]["total"] = total_duration
 
     metrics["hdf_results"] = FilesystemHDF(FINAL_RESULTS).to_memory().read("z_profile_.h5")
+    metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(FINAL_RESULTS)
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)

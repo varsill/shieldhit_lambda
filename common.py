@@ -5,9 +5,9 @@ from typing import Callable, Tuple, TypeVar
 import os
 import glob
 import shutil
-from converters import Converters
+import numpy as np
 
-SHOULD_USE_MEMFD = False
+REF_RESULTS="/home/ubuntu/shieldhit_lambda/ref_results"
 
 T = TypeVar("T")
 
@@ -85,3 +85,34 @@ def mktemp(dir=""):
         return subprocess.check_output(["mktemp", "-d"]).decode()[:-1]
     else:
         return subprocess.check_output(["mktemp", "-d", "-p", dir]).decode()[:-1]
+
+def distribution_metric(results_dir, reference_results_dir=REF_RESULTS):
+    results_filenames = _get_all_files_matching_the_regex(results_dir, "*.h5")
+    ref_results_filenames = _get_all_files_matching_the_regex(reference_results_dir, "*.h5")
+    common_filenames = list(set(results_filenames) & set(ref_results_filenames))
+
+    how_many_results_not_produced = len(ref_results_filenames)-len(common_filenames)
+
+    cumulative_mse = 0
+    
+    for filename in common_filenames:
+        results = load_hdf_result_file(f"{results_dir}/{filename}")
+        ref_results = load_hdf_result_file(f"{reference_results_dir}/{filename}")
+        if isinstance(results, list):
+            for page, ref_page in zip(results, ref_results):
+                mse = np.sum((page - ref_page) ** 2)
+                mse_normalized = mse / np.sum(ref_page**2)
+                cumulative_mse += mse_normalized
+        else:
+            mse = np.sum((results - ref_results) ** 2)
+            mse_normalized = mse / np.sum(ref_results**2)
+            cumulative_mse += mse_normalized
+    return cumulative_mse, how_many_results_not_produced
+
+
+def _get_all_files_matching_the_regex(directory_path, regex_str):
+    all_result_filenames = []
+    for path in glob.glob(f"{directory_path}/{regex_str}"):
+        _dir_path, just_filename = os.path.split(path)
+        all_result_filenames.append(just_filename)
+    return all_result_filenames

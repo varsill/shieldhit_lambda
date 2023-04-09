@@ -53,3 +53,20 @@ def plot_distribution(results_dump, group_by_param, plot_filename, title):
     # plt.ylim([0, 0.0001])
     plt.title(title)
     plt.savefig(plot_filename)
+
+
+def plot_mse(results, group_by_param, plot_filename, title):
+    
+    results_avg = (
+        results.groupby(f"params.{group_by_param}")
+        .agg(lambda x: np.average(x))
+        .reset_index()
+    )
+    print(results_avg["metrics.mse"])
+    plt.scatter(results_avg[f"params.{group_by_param}"], results_avg["metrics.mse"])
+    plt.xlabel(group_by_param)
+    plt.ylabel("MSE in contrast to single worker results")
+    plt.yscale("log")
+    # plt.ylim([0, 0.0001])
+    plt.title(title)
+    plt.savefig(plot_filename)

@@ -1,4 +1,4 @@
-from launchers.remote_mapper_remote_bdo_reducer import launch_test, LAUNCH_NAME
+from launchers.local_mapper_and_reducer import launch_test, LAUNCH_NAME
 import pickle
 import shutil
 import subprocess
@@ -18,7 +18,7 @@ def prepare_test_cases(params_dict):
         results_list.append(new_result)
     return results_list
         
-TEST_CASES = {"how_many_mappers": range(1, 10), "how_many_samples": 1000, "reduce_when": 1, "faas_environment": FAAS_ENVIRONMENT}
+TEST_CASES = {"how_many_mappers": 10, "how_many_samples": 1000, "reduce_when": 1, "faas_environment": FAAS_ENVIRONMENT}
 
 if __name__ == "__main__":
     filename = f"{LAUNCH_NAME}_{FAAS_ENVIRONMENT}_{TEST_RUNNER_POSTFIX}"
