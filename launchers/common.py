@@ -1,9 +1,16 @@
 import functools
 import lzma
+from collections import defaultdict
 
 from common import execute_concurrently, meassure_time
 from datatypes.in_memory import InMemoryBinary
 
+
+def _get_default_value_for_metrics_dict():
+    return {}
+
+def initialize_metrics():
+    return defaultdict(_get_default_value_for_metrics_dict)
 
 def prepare_multiple_remote_mappers_function(launch_mapper):
     return lambda how_many_samples, how_many_workers, dat_files, should_mapper_produce_hdf, save_to: _launch_multiple_remote_mappers(

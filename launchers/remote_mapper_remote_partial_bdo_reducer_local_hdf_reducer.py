@@ -7,7 +7,6 @@ import shutil
 import time
 from multiprocessing import Pool
 from typing import Dict
-from collections import defaultdict
 
 from common import separate_results, distribution_metric
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
@@ -15,6 +14,7 @@ from workers.common.remote import RemoteEnvironment
 from workers.common.remote_mapper_invocation_api import resolve_remote_mapper
 from workers.common.remote_reducer_invocation_api import resolve_remote_reducer
 from workers.local_hdf_reducer import launch_worker as launch_local_hdf_reducer
+from launchers.common import initialize_metrics
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
@@ -114,7 +114,7 @@ def launch_test(
     """
 
     # initial preparation
-    metrics = defaultdict(get_default_value_for_metrics_dict)
+    metrics = initialize_metrics()
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
     launch_single_mapper = resolve_remote_mapper(faas_environment)

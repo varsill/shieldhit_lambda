@@ -5,9 +5,10 @@ import subprocess
 import traceback
 import itertools
 
-TEST_RUNNER_POSTFIX="10_workers_1000_samples"
+
 METRICS_RESULT_BASE_PATH = "/home/ubuntu/backup/lambda_results"
 FAAS_ENVIRONMENT = "aws"
+TEST_RUNNER_POSTFIX=f"{FAAS_ENVIRONMENT}_10_workers_1000_samples"
 HOW_MANY_TRIES = 3
 
 def prepare_test_cases(params_dict):
@@ -21,7 +22,7 @@ def prepare_test_cases(params_dict):
 TEST_CASES = {"how_many_mappers": 10, "how_many_samples": 1000, "reduce_when": 1, "faas_environment": FAAS_ENVIRONMENT}
 
 if __name__ == "__main__":
-    filename = f"{LAUNCH_NAME}_{FAAS_ENVIRONMENT}_{TEST_RUNNER_POSTFIX}"
+    filename = f"{LAUNCH_NAME}_{TEST_RUNNER_POSTFIX}"
     print(f"{METRICS_RESULT_BASE_PATH}/{filename}.dump")
     test_results = []
     for test_case_params in prepare_test_cases(TEST_CASES):

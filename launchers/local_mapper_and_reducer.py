@@ -4,9 +4,10 @@ import shutil
 import subprocess
 from typing import Dict
 import time
-from collections import defaultdict
+
 
 from common import execute_concurrently, meassure_time, distribution_metric
+from launchers.common import initialize_metrics
 from datatypes.filesystem import FilesystemHDF
 
 INPUT_FILES_DIR = "input"
@@ -24,8 +25,7 @@ def launch_mapper(mapper_id, how_many_samples_per_mapper, **_rest_of_args):
     )
     return worker_time
 
-def get_default_value_for_metrics_dict():
-    return {}
+
 
 def launch_test(
     how_many_samples: int=None,
@@ -33,7 +33,7 @@ def launch_test(
     **_rest_of_args,
 ) -> Dict:
     # initial preparation
-    metrics = defaultdict(get_default_value_for_metrics_dict)
+    metrics = initialize_metrics()
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
     how_many_samples_per_mapper = int(how_many_samples / how_many_mappers)

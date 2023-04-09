@@ -3,10 +3,9 @@ import os
 import shutil
 from typing import Dict
 import time
-from collections import defaultdict
 
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
-from launchers.common import prepare_multiple_remote_mappers_function
+from launchers.common import prepare_multiple_remote_mappers_function, initialize_metrics
 from workers.common.remote import RemoteEnvironment
 from workers.common.remote_mapper_invocation_api import resolve_remote_mapper
 from workers.common.remote_reducer_invocation_api import resolve_remote_reducer
@@ -40,7 +39,7 @@ def launch_test(
     """
 
     # initial preparation
-    metrics = defaultdict(get_default_value_for_metrics_dict)
+    metrics = initialize_metrics()
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
     launch_single_mapper = resolve_remote_mapper(faas_environment)
