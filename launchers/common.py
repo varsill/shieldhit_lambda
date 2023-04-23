@@ -12,13 +12,13 @@ def _get_default_value_for_metrics_dict():
 def initialize_metrics():
     return defaultdict(_get_default_value_for_metrics_dict)
 
-def prepare_multiple_remote_mappers_function(launch_mapper):
+def prepare_multiple_simulate_functions(launch_simulate):
     return lambda how_many_samples, how_many_workers, dat_files, should_mapper_produce_hdf, save_to: _launch_multiple_remote_mappers(
         how_many_samples,
         how_many_workers,
         dat_files,
         should_mapper_produce_hdf,
-        launch_mapper,
+        launch_simulate,
         save_to=save_to,
     )
 
@@ -27,7 +27,6 @@ def _launch_multiple_remote_mappers(
     how_many_samples: int,
     how_many_workers: int,
     dat_files: InMemoryBinary,
-    should_mapper_produce_hdf: bool,
     launch_mapper,
     save_to: str,
 ):
@@ -36,7 +35,6 @@ def _launch_multiple_remote_mappers(
         launch_mapper,
         how_many_samples=samples_per_worker,
         files=dat_files,
-        should_produce_hdf=should_mapper_produce_hdf,
         save_to=save_to,
     )
 
@@ -52,7 +50,7 @@ def _launch_multiple_remote_mappers(
     for r in successfull_mapper_results:
         in_memory_data_to_return.merge(r["files"])
         mappers_request_times.append(r["request_time"])
-        mappers_simulation_times.append(r["simulation_time"])
+        mappers_simulation_times.append(r["execution_time"])
     return (
         in_memory_data_to_return,
         map_time,

@@ -29,7 +29,6 @@ def mapper_and_bdo_reducer(
     launch_reducer,
     how_many_samples,
     dat_files,
-    should_produce_hdf,
     tmp_dir,
     reduce_when,
 ):
@@ -38,7 +37,6 @@ def mapper_and_bdo_reducer(
             worker_id,
             how_many_samples,
             dat_files,
-            should_produce_hdf,
             save_to="download",
         )
         number_of_files_produced_by_me = len(result["files"].read_all().keys())
@@ -73,7 +71,6 @@ def mapper_and_bdo_reducer(
             reduce_time_request,
         ) = launch_reducer(
             left_in_memory_mapper_results,
-            "hdf",
             worker_id_prefix=str(worker_id),
             get_from="uploaded",
         )
@@ -135,7 +132,6 @@ def launch_test(
             launch_reducer=launch_reducer,
             how_many_samples=how_many_samples_per_mapper,
             dat_files=dat_files,
-            should_produce_hdf=False,
             tmp_dir=TEMPORARY_RESULTS,
             reduce_when=reduce_when,
         )

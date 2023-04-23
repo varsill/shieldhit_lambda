@@ -68,7 +68,7 @@ def launch_test(
         reducer_in_memory_results,
         reducer_simulation_time,
         reducer_request_time,
-    ) = launch_reducer(in_memory_mapper_results, "hdf", get_from="uploaded")
+    ) = launch_reducer(in_memory_mapper_results, get_from="uploaded")
 
     reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
     total_duration = time.time()-start_time

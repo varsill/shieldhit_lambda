@@ -13,62 +13,90 @@ from converters import Converters
 
 BUCKET = "shieldhit-results-bucket"
 
-
 def execute(event):
     action = event.get("action", "action not provided")
-    if action == "map":
+    if action == "simulate":
         n = event.get("n", 1000)
         N = event.get("N", 0)
         files = event["files"]
         save_to = event.get("save_to", "download")
-        return mapper(n, N, files, False, save_to)
-    elif action == "map_and_reduce":
+        loaded = load(files, "uploaded")
+        results = run_shieldhit(n, N, loaded)
+        return save(results, ".bdo", save_to)
+    elif action == "simulate_and_extract":
         n = event.get("n", 1000)
         N = event.get("N", 0)
         files = event["files"]
         save_to = event.get("save_to", "download")
-        return mapper(n, N, files, True, save_to)
-    elif action == "reduce":
+        loaded = load(files, "uploaded")
+        results = run_shieldhit(n, N, loaded)
+        results = run_convertmc(results, 0)
+        return save(results, ".h5", save_to)
+    elif action == "extract_and_reduce":
         files = event["files"]
         get_from = event.get("get_from", "uploaded")
-        operation = event["operation"]
         worker_id_prefix = event["N"]
-        return reducer(files, get_from, operation, worker_id_prefix)
+        loaded = load(files, get_from)
+        results = run_convertmc(loaded, worker_id_prefix)
+        return save(results, ".h5", "download")
     else:
         raise Exception(f"Unknown action: {action}")
 
 
-def mapper(n, N, files, should_produce_hdf, save_to):
+def run_shieldhit(n, N, dir):
     try:
         subprocess.check_output(["chmod", "a+x", "shieldhit"])
-        if should_produce_hdf:
-            subprocess.check_output(["chmod", "a+x", "convertmc"])
     except Exception:
         pass
 
+    subprocess.check_output(["./shieldhit", "-n", str(n), "-N", str(N), dir])
+
+    return dir
+
+
+def run_convertmc(dir, worker_id_prefix):
+    try:
+        subprocess.check_output(["chmod", "a+x", "convertmc"])
+    except Exception:
+        pass
+
+    subprocess.run(
+        f"./convertmc hdf --many {dir}/*.bdo {dir}",
+        check=False,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    all_hdf_files = glob.glob(f"{dir}/*.h5")
+    _all_hdf_files_with_changed_name = _rename_hdf_files(all_hdf_files, worker_id_prefix)
+    return dir
+
+def load(files, get_from):
     tmpdir = mktemp()
 
-    Converters.map_to_files(files, tmpdir, lzma.decompress)
-    # x = subprocess.run(f"cat {tmpdir}/geo.dat", shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # raise Exception(str(x))
-    subprocess.check_output(["./shieldhit", "-n", str(n), "-N", str(N), tmpdir])
+    if get_from == "uploaded":
+        Converters.map_to_files(files, tmpdir, lzma.decompress)
+    elif get_from == "s3":
+        client = boto3.client("s3")
+        for just_filename in files.keys():
+            client.download_file(
+                BUCKET, files[just_filename], f"{tmpdir}/{just_filename}"
+            )
+    elif get_from == "volume":
+        for just_filename in files.keys():
+            shutil.move(files[just_filename], tmpdir)
+    return tmpdir
 
-    if should_produce_hdf:
-        subprocess.check_output(
-            ["./convertmc", "hdf", "--many", f"{tmpdir}/*.bdo", tmpdir]
-        )
-        all_hdf_files = glob.glob(f"{tmpdir}/*.h5")
-        all_result_files = _rename_hdf_files(all_hdf_files, str(N))
-    else:
-        all_result_files = glob.glob(f"{tmpdir}/*.bdo")
 
+def save(dir, files_to_save_extension, save_to):
+    all_result_files = glob.glob(f"{dir}/*{files_to_save_extension}")
     if save_to == "s3":
-
         bucket_dir = _get_random_string()
         client = boto3.client("s3")
         results_map = {}
         for filename in all_result_files:
-            directory_path, just_file_name = os.path.split(filename)
+            _directory_path, just_file_name = os.path.split(filename)
             f = open(filename, "rb")
             client.put_object(
                 Body=f.read(), Bucket=BUCKET, Key=f"{bucket_dir}/{just_file_name}"
@@ -86,55 +114,13 @@ def mapper(n, N, files, should_produce_hdf, save_to):
         volume_tmp_dir = mktemp(volume_dir)
         results_map = {}
         for filename in all_result_files:
-            directory_path, just_file_name = os.path.split(filename)
+            _directory_path, just_file_name = os.path.split(filename)
             shutil.move(filename, volume_tmp_dir)
             results_map[just_file_name] = f"{volume_tmp_dir}/{just_file_name}"
     else:
         raise Exception(f"Unknown save_to parameter: {save_to}")
-    subprocess.check_output(f"rm -r {tmpdir}", shell=True)
+    subprocess.check_output(f"rm -r {dir}", shell=True)
     return results_map
-
-
-def reducer(files, get_from, operation, worker_id_prefix):
-    try:
-        subprocess.check_output(["chmod", "a+x", "convertmc"])
-    except Exception:
-        pass
-    tmpdir = mktemp()
-
-    if get_from == "uploaded":
-        Converters.map_to_files(files, tmpdir, lzma.decompress)
-    elif get_from == "s3":
-
-        client = boto3.client("s3")
-        for just_filename in files.keys():
-            client.download_file(
-                BUCKET, files[just_filename], f"{tmpdir}/{just_filename}"
-            )
-    elif get_from == "volume":
-        for just_filename in files.keys():
-            shutil.move(files[just_filename], tmpdir)
-
-    x = subprocess.run(
-        ["./convertmc", operation, "--many", f"{tmpdir}/*.bdo", tmpdir],
-        check=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-    # if x.returncode != 0:
-    #     subprocess.check_output(f"rm -r {tmpdir}", shell=True)
-    # x = subprocess.run(f"cat {tmpdir}/{filename}", shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if operation == "image":
-        extension = ".png"
-    elif operation == "hdf":
-        extension = ".h5"
-    all_hdf_files = glob.glob(f"{tmpdir}/*{extension}")
-    all_hdf_files_with_changed_name = _rename_hdf_files(all_hdf_files, worker_id_prefix)
-    result_map = Converters.files_to_map(all_hdf_files_with_changed_name, lzma.compress)
-    subprocess.check_output(f"rm -r {tmpdir}", shell=True)
-    return result_map
-
 
 def _rename_hdf_files(all_hdf_files, worker_id_prefix=""):
     all_hdf_files_with_changed_name = []

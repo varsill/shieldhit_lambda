@@ -5,7 +5,6 @@ from typing import Callable, Tuple, TypeVar
 import os
 import glob
 import shutil
-import numpy as np
 
 REF_RESULTS="/home/ubuntu/shieldhit_lambda/ref_results"
 
@@ -87,11 +86,13 @@ def mktemp(dir=""):
         return subprocess.check_output(["mktemp", "-d", "-p", dir]).decode()[:-1]
 
 def distribution_metric(results_dir, reference_results_dir=REF_RESULTS):
+    import numpy as np
+
     results_filenames = _get_all_files_matching_the_regex(results_dir, "*.h5")
     ref_results_filenames = _get_all_files_matching_the_regex(reference_results_dir, "*.h5")
     common_filenames = list(set(results_filenames) & set(ref_results_filenames))
     how_many_results_not_produced = len(ref_results_filenames)-len(common_filenames)
-    
+
     if len(results_filenames)==0:
         return 1, how_many_results_not_produced
     

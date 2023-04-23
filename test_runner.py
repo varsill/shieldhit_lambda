@@ -1,14 +1,16 @@
-from launchers.remote_mapper_remote_partial_bdo_reducer_local_hdf_reducer_with_persistent_storage import launch_test, LAUNCH_NAME
+LAUNCH_NAME = "remoteA__remoteB__remoteB_and_local__persistent"
+METRICS_RESULT_BASE_PATH = "/home/ubuntu/backup/lambda_results/new"
+FAAS_ENVIRONMENT = "aws"
+TEST_RUNNER_POSTFIX=f"{FAAS_ENVIRONMENT}_100-300_workers_1mln_samples"
+HOW_MANY_TRIES = 3
+
+import importlib
+launcher = importlib.import_module(f"launchers.{LAUNCH_NAME}")
 import itertools
 import pickle
 import shutil
 import traceback
 import subprocess
-
-METRICS_RESULT_BASE_PATH = "/home/ubuntu/backup/lambda_results/new"
-FAAS_ENVIRONMENT = "aws"
-TEST_RUNNER_POSTFIX=f"{FAAS_ENVIRONMENT}_100-300_workers_1mln_samples"
-HOW_MANY_TRIES = 3
 
 def prepare_test_cases(params_dict):
     params_dict_with_enumerable_values = {key: (value if (isinstance(value, range) or isinstance(value, list)) else [value]) for key, value in params_dict.items()}
@@ -18,7 +20,7 @@ def prepare_test_cases(params_dict):
         results_list.append(new_result)
     return results_list
         
-TEST_CASES = {"how_many_mappers": [100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300], "how_many_samples": 1000000, "reduce_when": 1, "faas_environment": FAAS_ENVIRONMENT}
+TEST_CASES = {"how_many_workers": [10, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300], "how_many_samples": 1000, "reduce_when": 1, "faas_environment": FAAS_ENVIRONMENT}
 
 if __name__ == "__main__":
     filename = f"{LAUNCH_NAME}_{TEST_RUNNER_POSTFIX}"
@@ -27,7 +29,7 @@ if __name__ == "__main__":
     for test_case_params in prepare_test_cases(TEST_CASES):
         for try_number in range(HOW_MANY_TRIES):
             try:
-                metrics = launch_test(**test_case_params)
+                metrics = launcher.launch_test(**test_case_params)
 
                 test_instance = {
                     "params": test_case_params,

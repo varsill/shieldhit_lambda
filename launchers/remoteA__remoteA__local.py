@@ -5,23 +5,22 @@ from typing import Dict
 import time
 
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
-from launchers.common import prepare_multiple_remote_mappers_function, initialize_metrics
+from launchers.common import prepare_multiple_simulate_functions, initialize_metrics
 from workers.common.remote import RemoteEnvironment
-from workers.common.remote_mapper_invocation_api import resolve_remote_mapper
-from workers.local_hdf_reducer import launch_worker as launch_local_hdf_reducer
+from workers.common.remote_invocation_api import resolve_remote_function
+from workers.local.reduce import reduce
 from common import distribution_metric
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
-LAUNCH_NAME = "remote_local_hdf"
 
 def get_default_value_for_metrics_dict():
     return {}
 
 def launch_test(
     how_many_samples: int=None,
-    how_many_mappers: int=None,
+    how_many_workers: int=None,
     faas_environment: RemoteEnvironment=None,
     **_rest_of_args
 ) -> Dict:
@@ -31,7 +30,7 @@ def launch_test(
 
     Args:
         how_many_samples (int): number of samples that should be generated
-        how_many_mappers (int): number of workers that should be used for samples generation
+        how_many_workers (int): number of workers that should be used for samples generation
         faas_environment (RemoteEnvironment): "whisk" if HPCWHisk should be used, "aws" if AWS Lambda should be used
 
     Returns:
@@ -42,48 +41,48 @@ def launch_test(
     metrics = initialize_metrics()
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
-    launch_single_mapper = resolve_remote_mapper(faas_environment)
-    launch_multiple_mappers = prepare_multiple_remote_mappers_function(
-        launch_single_mapper
+    launch_single_simulate_and_extract = resolve_remote_function("simulate_and_extract", faas_environment)
+    launch_multiple_simulate_and_extract = prepare_multiple_simulate_functions(
+        launch_single_simulate_and_extract
     )
 
-    # mapping
+    # simulate and extract
     start_time = time.time()
     dat_files = FilesystemBinary(INPUT_FILES_DIR, transform=lzma.compress).to_memory()
     (
-        in_memory_mapper_results,
-        map_time,
-        mappers_request_times,
-        mappers_simulation_times,
-    ) = launch_multiple_mappers(
+        in_memory_simulate_and_extract_results,
+        simulate_and_extract_time,
+        simulate_and_extract_request_times,
+        simulate_and_extract_execution_times,
+    ) = launch_multiple_simulate_and_extract(
         how_many_samples,
-        how_many_mappers,
+        how_many_workers,
         dat_files,
         True,
         save_to="download",
     )
-    mapper_filesystem_hdf_results = in_memory_mapper_results.to_filesystem(
+    filesystem_simulate_and_extract_results = in_memory_simulate_and_extract_results.to_filesystem(
         TEMPORARY_RESULTS
     ).to_hdf()
-    # reducing
-    reducer_in_memory_results, reduce_time = launch_local_hdf_reducer(
-        mapper_filesystem_hdf_results
+    # reduce
+    reducer_in_memory_results, reduce_time = reduce(
+        filesystem_simulate_and_extract_results
     )
     reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
     total_duration = time.time() - start_time
     # update metrics
     metrics["phases"] = ["simulating_and_extracting", "reducing"]
     
-    metrics["number_of_workers"]["simulate_and_extract"] = how_many_mappers
+    metrics["number_of_workers"]["simulate_and_extract"] = how_many_workers
     metrics["number_of_workers"]["reduce"] = 1
     
-    metrics["workers_request_times"]["simulate_and_extract"] = mappers_request_times
+    metrics["workers_request_times"]["simulate_and_extract"] = simulate_and_extract_request_times
     metrics["workers_request_times"]["reduce"] = [reduce_time]
 
-    metrics["workers_execution_times"]["simulate_and_extract"] = mappers_simulation_times
+    metrics["workers_execution_times"]["simulate_and_extract"] = simulate_and_extract_execution_times
     metrics["workers_execution_times"]["reduce"] = [reduce_time]
 
-    metrics["makespan"]["simulating_and_extracting"] = map_time
+    metrics["makespan"]["simulating_and_extracting"] = simulate_and_extract_time
     metrics["makespan"]["reducing"] = reduce_time
     metrics["makespan"]["total"] = total_duration
 

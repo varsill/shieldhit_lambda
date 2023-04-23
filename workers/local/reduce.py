@@ -6,7 +6,7 @@ from datatypes.filesystem import FilesystemHDF
 from datatypes.in_memory import InMemoryHDF
 
 
-def launch_worker(input_files: FilesystemHDF):
+def reduce(input_files: FilesystemHDF):
     tmpdir = mktemp()
     separate_results(input_files.get_directory(), tmpdir)
     cumulative_result = InMemoryHDF({})

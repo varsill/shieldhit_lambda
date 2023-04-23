@@ -2,22 +2,20 @@ import os
 
 from datatypes.in_memory import InMemoryBinary
 
-def launch_worker(
+def simulate_and_extract(
     worker_id: int,
     how_many_samples: int,
     files: InMemoryBinary,
-    should_produce_hdf: bool,
     save_to: str,
 ):
 
     try:
-        from workers.common.remote_mapper_invocation_api import send_request_to_remote_mapper
-        return send_request_to_remote_mapper(
+        from workers.common.remote_invocation_api import send_request_to_remote_simulate_and_extract
+        return send_request_to_remote_simulate_and_extract(
             worker_id,
             how_many_samples,
             files,
             os.getenv("WHISK_ACTION_URL"),
-            should_produce_hdf,
             save_to,
         )
     except Exception as e:
