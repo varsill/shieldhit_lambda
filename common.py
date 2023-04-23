@@ -90,11 +90,12 @@ def distribution_metric(results_dir, reference_results_dir=REF_RESULTS):
     results_filenames = _get_all_files_matching_the_regex(results_dir, "*.h5")
     ref_results_filenames = _get_all_files_matching_the_regex(reference_results_dir, "*.h5")
     common_filenames = list(set(results_filenames) & set(ref_results_filenames))
-
     how_many_results_not_produced = len(ref_results_filenames)-len(common_filenames)
-
-    cumulative_mse = 0
     
+    if len(results_filenames)==0:
+        return 1, how_many_results_not_produced
+    
+    cumulative_mse = 0
     for filename in common_filenames:
         results = load_hdf_result_file(f"{results_dir}/{filename}")
         ref_results = load_hdf_result_file(f"{reference_results_dir}/{filename}")
