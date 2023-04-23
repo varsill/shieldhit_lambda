@@ -180,8 +180,12 @@ def launch_test(
     metrics["makespan"]["final_reducing"] = cumulative_hdf_reduce_time
     metrics["makespan"]["total"] = total_duration
 
-    metrics["hdf_results"] = FilesystemHDF(FINAL_RESULTS).to_memory().read("z_profile.h5")
-    metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(FINAL_RESULTS)
+    in_memory_final_results = FilesystemHDF(FINAL_RESULTS).to_memory()
+    if "z_profile.h5" in in_memory_final_results.files_map.keys():
+        metrics["hdf_results"] = in_memory_final_results.read("z_profile.h5")
+        metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(FINAL_RESULTS)
+    else:
+        metrics["mse"], metrics["how_many_results_not_delivered"] = 1, how_many_mappers
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)
