@@ -186,20 +186,24 @@ def launch_test(
     metrics["number_of_workers"]["extract_and_partially_reduce"] = int(how_many_mappers/reduce_when)
     metrics["number_of_workers"]["final_reduce"] = 1
     
-    metrics["workers_request_times"]["simulate"] = [r["mapper_request_time"] for r in results]
-    metrics["workers_request_times"]["extract_and_partially_reduce"] = [r["bdo_reducer_request_time"] for r in results if r["type"] == "MAP_EXTRACT_REDUCE"]
+    metrics["workers_request_times"]["simulate"] = [r["mapper_request_time"] for r in ok_results]
+    metrics["workers_request_times"]["extract_and_partially_reduce"] = [r["bdo_reducer_request_time"] for r in ok_results if r["type"] == "MAP_EXTRACT_REDUCE"]
     metrics["workers_request_times"]["final_reduce"] = [cumulative_hdf_reduce_time]
 
-    metrics["workers_execution_times"]["simulate"] = [r["mapper_simulation_time"] for r in results]
-    metrics["workers_execution_times"]["extract_and_partially_reduce"] = [r["bdo_reducer_simulation_time"] for r in results if r["type"] == "MAP_EXTRACT_REDUCE"]
+    metrics["workers_execution_times"]["simulate"] = [r["mapper_simulation_time"] for r in ok_results]
+    metrics["workers_execution_times"]["extract_and_partially_reduce"] = [r["bdo_reducer_simulation_time"] for r in ok_results if r["type"] == "MAP_EXTRACT_REDUCE"]
     metrics["workers_execution_times"]["final_reduce"] = [cumulative_hdf_reduce_time]
     
     metrics["makespan"]["simulating_extracting_and_partially_reducing"] = mapper_and_bdo_reducer_time
     metrics["makespan"]["final_reducing"] = cumulative_hdf_reduce_time
     metrics["makespan"]["total"] = total_duration
 
-    metrics["hdf_results"] = FilesystemHDF(FINAL_RESULTS).to_memory().read("z_profile.h5")
-    metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(FINAL_RESULTS)
+    in_memory_final_results = FilesystemHDF(FINAL_RESULTS).to_memory()
+    if "z_profile.h5" in in_memory_final_results.files_map.keys():
+        metrics["hdf_results"] = in_memory_final_results.read("z_profile.h5")
+        metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(FINAL_RESULTS)
+    else:
+        metrics["mse"], metrics["how_many_results_not_delivered"] = 1, how_many_mappers
     
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)

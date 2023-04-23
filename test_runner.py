@@ -1,14 +1,13 @@
-from launchers.remote_mapper_remote_bdo_reducer import launch_test, LAUNCH_NAME
+from launchers.remote_mapper_remote_partial_bdo_reducer_local_hdf_reducer_with_persistent_storage import launch_test, LAUNCH_NAME
+import itertools
 import pickle
 import shutil
-import subprocess
 import traceback
-import itertools
+import subprocess
 
-
-METRICS_RESULT_BASE_PATH = "/home/ubuntu/backup/lambda_results"
+METRICS_RESULT_BASE_PATH = "/home/ubuntu/backup/lambda_results/new"
 FAAS_ENVIRONMENT = "aws"
-TEST_RUNNER_POSTFIX=f"{FAAS_ENVIRONMENT}_10_workers_1000_samples"
+TEST_RUNNER_POSTFIX=f"{FAAS_ENVIRONMENT}_100-300_workers_1mln_samples"
 HOW_MANY_TRIES = 3
 
 def prepare_test_cases(params_dict):
@@ -19,7 +18,7 @@ def prepare_test_cases(params_dict):
         results_list.append(new_result)
     return results_list
         
-TEST_CASES = {"how_many_mappers": 10, "how_many_samples": 1000, "reduce_when": 1, "faas_environment": FAAS_ENVIRONMENT}
+TEST_CASES = {"how_many_mappers": [100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300], "how_many_samples": 1000000, "reduce_when": 1, "faas_environment": FAAS_ENVIRONMENT}
 
 if __name__ == "__main__":
     filename = f"{LAUNCH_NAME}_{TEST_RUNNER_POSTFIX}"
