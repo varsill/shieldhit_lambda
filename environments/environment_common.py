@@ -6,12 +6,11 @@ import shutil
 import string
 import subprocess
 
-import boto3
-
 from common import mktemp
 from converters import Converters
 
 BUCKET = "shieldhit-results-bucket"
+
 
 def execute(event):
     action = event.get("action", "action not provided")
@@ -69,8 +68,11 @@ def run_convertmc(dir, worker_id_prefix):
     )
 
     all_hdf_files = glob.glob(f"{dir}/*.h5")
-    _all_hdf_files_with_changed_name = _rename_hdf_files(all_hdf_files, worker_id_prefix)
+    _all_hdf_files_with_changed_name = _rename_hdf_files(
+        all_hdf_files, worker_id_prefix
+    )
     return dir
+
 
 def load(files, get_from):
     tmpdir = mktemp()
@@ -78,6 +80,8 @@ def load(files, get_from):
     if get_from == "uploaded":
         Converters.map_to_files(files, tmpdir, lzma.decompress)
     elif get_from == "s3":
+        import boto3
+
         client = boto3.client("s3")
         for just_filename in files.keys():
             client.download_file(
@@ -92,6 +96,8 @@ def load(files, get_from):
 def save(dir, files_to_save_extension, save_to):
     all_result_files = glob.glob(f"{dir}/*{files_to_save_extension}")
     if save_to == "s3":
+        import boto3
+
         bucket_dir = _get_random_string()
         client = boto3.client("s3")
         results_map = {}
@@ -121,6 +127,7 @@ def save(dir, files_to_save_extension, save_to):
         raise Exception(f"Unknown save_to parameter: {save_to}")
     subprocess.check_output(f"rm -r {dir}", shell=True)
     return results_map
+
 
 def _rename_hdf_files(all_hdf_files, worker_id_prefix=""):
     all_hdf_files_with_changed_name = []

@@ -14,7 +14,6 @@ class InMemoryBinary:
     transform: Any = None
 
     def to_filesystem(self, output_dir, use_memfd=False):
-
         Converters.map_to_files(self.files_map, output_dir, self.transform, use_memfd)
         return FilesystemBinary(output_dir)
 
@@ -40,7 +39,6 @@ class InMemoryHDF:
     files_map: Dict
 
     def to_filesystem(self, output_dir):
-
         for filename in self.files_map.keys():
             with h5py.File(f"{output_dir}/{filename}", "w") as f:
                 if isinstance(self.files_map[filename], list):

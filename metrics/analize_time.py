@@ -2,6 +2,7 @@ import functools
 
 import matplotlib.pyplot as plt
 
+
 def _agregate_times(column, metric):
     if column.name != f"metrics.{metric}":
         return None
@@ -20,7 +21,7 @@ def plot_request_times_histogram(
     results_avg = (
         results.groupby(f"params.{group_by_param}").agg(agregator).reset_index()
     )
-    
+
     all_times = results_avg[f"metrics.{metric}"].tolist()[0]
     plt.hist(all_times)
     plt.xlabel("Request time [s]")
@@ -55,12 +56,12 @@ def plot_execution_time_to_request_time_vs_param(
     plt.bar(
         results_avg[f"params.{group_by_param}"],
         results_avg["mean_request_time"],
-        label="Request time"
+        label="Request time",
     )
     plt.bar(
         results_avg[f"params.{group_by_param}"],
         results_avg["mean_execution_time"],
-        label="Execution time"
+        label="Execution time",
     )
     plt.legend()
     plt.xlabel(f"{group_by_param}")
@@ -99,9 +100,7 @@ def plot_phases_makespan_vs_params(
     results, group_by_param, plot_filename, phases_list, title
 ):
     results_avg = (
-        results.groupby(f"params.{group_by_param}")
-        .mean(phases_list)
-        .reset_index()
+        results.groupby(f"params.{group_by_param}").mean(phases_list).reset_index()
     )
 
     results_std = results.groupby(f"params.{group_by_param}").std().fillna(0)
@@ -132,7 +131,7 @@ def plot_execution_time_and_request_time_ratio_vs_param(
         else 0,
         axis=1,
     )
-    
+
     results["mean_request_time"] = results.apply(
         lambda row: sum(row[f"metrics.workers_request_times.{worker}"])
         / len(row[f"metrics.workers_request_times.{worker}"])
@@ -200,9 +199,18 @@ def plot_cumulative_time_vs_params(
     plt.savefig(plot_filename)
 
 
-def plot_speedup(input_results_dump, group_by_param, plot_filename, phase, phase_with_single_worker_duration, title):
+def plot_speedup(
+    input_results_dump,
+    group_by_param,
+    plot_filename,
+    phase,
+    phase_with_single_worker_duration,
+    title,
+):
     input_results_dump["speedup"] = input_results_dump.apply(
-        lambda row: phase_with_single_worker_duration / (row[f"metrics.makespan.{phase}"]), axis=1
+        lambda row: phase_with_single_worker_duration
+        / (row[f"metrics.makespan.{phase}"]),
+        axis=1,
     )
     results_avg = (
         input_results_dump.groupby(f"params.{group_by_param}")

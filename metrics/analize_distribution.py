@@ -55,11 +55,17 @@ def plot_distribution(results_dump, group_by_param, plot_filename, title):
     plt.savefig(plot_filename)
 
 
-def plot_mse(results, group_by_param, plot_filename, title):    
+def plot_mse(results, group_by_param, plot_filename, title):
     results_avg = results.groupby(f"params.{group_by_param}").mean().reset_index()
     results_std = results.groupby(f"params.{group_by_param}").std().fillna(0)
 
-    plt.errorbar(results_avg[f"params.{group_by_param}"], results_avg["metrics.mse"], results_std["metrics.mse"], linestyle='None', marker='^')
+    plt.errorbar(
+        results_avg[f"params.{group_by_param}"],
+        results_avg["metrics.mse"],
+        results_std["metrics.mse"],
+        linestyle="None",
+        marker="^",
+    )
     plt.xlabel(group_by_param)
     plt.ylabel("MSE in contrast to single worker results")
     plt.yscale("log")

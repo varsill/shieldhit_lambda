@@ -1,6 +1,6 @@
-LAUNCH_NAME = "remoteA__remoteB__remoteB_and_local__persistent"
+LAUNCH_NAME = "remoteA__remoteB__remoteB"
 METRICS_RESULT_BASE_PATH = "/home/ubuntu/backup/lambda_results/new"
-FAAS_ENVIRONMENT = "aws"
+FAAS_ENVIRONMENT = "whisk"
 TEST_RUNNER_POSTFIX=f"{FAAS_ENVIRONMENT}_100-300_workers_1mln_samples"
 HOW_MANY_TRIES = 3
 
@@ -20,7 +20,7 @@ def prepare_test_cases(params_dict):
         results_list.append(new_result)
     return results_list
         
-TEST_CASES = {"how_many_workers": [10, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300], "how_many_samples": 1000, "reduce_when": 1, "faas_environment": FAAS_ENVIRONMENT}
+TEST_CASES = {"how_many_workers": [100], "how_many_samples": 1000000, "reduce_when": 2, "faas_environment": FAAS_ENVIRONMENT}
 
 if __name__ == "__main__":
     filename = f"{LAUNCH_NAME}_{TEST_RUNNER_POSTFIX}"

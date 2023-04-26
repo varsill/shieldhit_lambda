@@ -1,27 +1,30 @@
 import lzma
 import os
 import shutil
-from typing import Dict
 import time
+from typing import Dict
 
+from common import distribution_metric
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
-from launchers.common import prepare_multiple_simulate_functions, initialize_metrics
+from launchers.common import (initialize_metrics,
+                              prepare_multiple_simulate_functions)
 from workers.common.remote import RemoteEnvironment
 from workers.common.remote_invocation_api import resolve_remote_function
 from workers.local.reduce import reduce
-from common import distribution_metric
 
 INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 
+
 def get_default_value_for_metrics_dict():
     return {}
 
+
 def launch_test(
-    how_many_samples: int=None,
-    how_many_workers: int=None,
-    faas_environment: RemoteEnvironment=None,
+    how_many_samples: int = None,
+    how_many_workers: int = None,
+    faas_environment: RemoteEnvironment = None,
     **_rest_of_args
 ) -> Dict:
     """
@@ -41,7 +44,9 @@ def launch_test(
     metrics = initialize_metrics()
     os.makedirs(TEMPORARY_RESULTS, exist_ok=True)
     os.makedirs(FINAL_RESULTS, exist_ok=True)
-    launch_single_simulate_and_extract = resolve_remote_function("simulate_and_extract", faas_environment)
+    launch_single_simulate_and_extract = resolve_remote_function(
+        "simulate_and_extract", faas_environment
+    )
     launch_multiple_simulate_and_extract = prepare_multiple_simulate_functions(
         launch_single_simulate_and_extract
     )
@@ -61,9 +66,9 @@ def launch_test(
         True,
         save_to="download",
     )
-    filesystem_simulate_and_extract_results = in_memory_simulate_and_extract_results.to_filesystem(
-        TEMPORARY_RESULTS
-    ).to_hdf()
+    filesystem_simulate_and_extract_results = (
+        in_memory_simulate_and_extract_results.to_filesystem(TEMPORARY_RESULTS).to_hdf()
+    )
     # reduce
     reducer_in_memory_results, reduce_time = reduce(
         filesystem_simulate_and_extract_results
@@ -72,14 +77,18 @@ def launch_test(
     total_duration = time.time() - start_time
     # update metrics
     metrics["phases"] = ["simulating_and_extracting", "reducing"]
-    
+
     metrics["number_of_workers"]["simulate_and_extract"] = how_many_workers
     metrics["number_of_workers"]["reduce"] = 1
-    
-    metrics["workers_request_times"]["simulate_and_extract"] = simulate_and_extract_request_times
+
+    metrics["workers_request_times"][
+        "simulate_and_extract"
+    ] = simulate_and_extract_request_times
     metrics["workers_request_times"]["reduce"] = [reduce_time]
 
-    metrics["workers_execution_times"]["simulate_and_extract"] = simulate_and_extract_execution_times
+    metrics["workers_execution_times"][
+        "simulate_and_extract"
+    ] = simulate_and_extract_execution_times
     metrics["workers_execution_times"]["reduce"] = [reduce_time]
 
     metrics["makespan"]["simulating_and_extracting"] = simulate_and_extract_time
@@ -89,7 +98,9 @@ def launch_test(
     in_memory_final_results = FilesystemHDF(FINAL_RESULTS).to_memory()
     if "z_profile.h5" in in_memory_final_results.files_map.keys():
         metrics["hdf_results"] = in_memory_final_results.read("z_profile.h5")
-    metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(FINAL_RESULTS)
+    metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(
+        FINAL_RESULTS
+    )
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)

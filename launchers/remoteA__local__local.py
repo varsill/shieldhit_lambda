@@ -1,13 +1,13 @@
 import lzma
 import os
 import shutil
-from typing import Dict
 import time
+from typing import Dict
 
 from common import distribution_metric
-
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
-from launchers.common import prepare_multiple_simulate_functions, initialize_metrics
+from launchers.common import (initialize_metrics,
+                              prepare_multiple_simulate_functions)
 from workers.common.remote import RemoteEnvironment
 from workers.common.remote_invocation_api import resolve_remote_function
 from workers.local.extract_and_reduce import extract_and_reduce
@@ -16,10 +16,11 @@ INPUT_FILES_DIR = "input/"
 TEMPORARY_RESULTS = "results/temporary"
 FINAL_RESULTS = "results/final"
 
+
 def launch_test(
-    how_many_samples: int=None,
-    how_many_workers: int=None,
-    faas_environment: RemoteEnvironment=None,
+    how_many_samples: int = None,
+    how_many_workers: int = None,
+    faas_environment: RemoteEnvironment = None,
     **_rest_of_args
 ) -> Dict:
     """
@@ -65,15 +66,15 @@ def launch_test(
     _reducer_filesystem_result, reduce_time = extract_and_reduce(
         binary_filesystem_simulate_results, FINAL_RESULTS
     )
-    total_duration = time.time()-start_time
+    total_duration = time.time() - start_time
 
     # update metrics
 
     metrics["phases"] = ["simulating", "extracting_reducing"]
-    
+
     metrics["number_of_workers"]["simulate"] = how_many_workers
     metrics["number_of_workers"]["extract_and_reduce"] = 1
-    
+
     metrics["workers_request_times"]["simulate"] = simulate_request_times
     metrics["workers_request_times"]["extract_and_reduce"] = [reduce_time]
 
@@ -87,7 +88,9 @@ def launch_test(
     in_memory_final_results = FilesystemHDF(FINAL_RESULTS).to_memory()
     if "z_profile_.h5" in in_memory_final_results.files_map.keys():
         metrics["hdf_results"] = in_memory_final_results.read("z_profile_.h5")
-    metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(FINAL_RESULTS)
+    metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(
+        FINAL_RESULTS
+    )
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)

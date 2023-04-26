@@ -25,7 +25,9 @@ parser.add_argument("-t", "--title", default="")
 subparsers = parser.add_subparsers(title="operation", dest="operation")
 
 histogram_parser = subparsers.add_parser("histogram")
-histogram_parser.add_argument("-m", "--metric", default="workers_request_times.simulate")
+histogram_parser.add_argument(
+    "-m", "--metric", default="workers_request_times.simulate"
+)
 histogram_parser.add_argument("--group_by_param_value", default=100)
 
 success_ratio_parser = subparsers.add_parser("success_ratio")
@@ -38,9 +40,7 @@ execution_to_request_ratio_parser = subparsers.add_parser("execution_to_request_
 execution_to_request_ratio_parser.add_argument("-w", "--worker", default="simulate")
 
 phases_makespan_parser = subparsers.add_parser("phases_makespan")
-phases_makespan_parser.add_argument(
-    "-p", "--phases", default="total"
-)
+phases_makespan_parser.add_argument("-p", "--phases", default="total")
 
 distribution_parser = subparsers.add_parser("distribution")
 
@@ -97,7 +97,11 @@ elif operation == "execution_and_request":
 
 elif operation == "success_ratio":
     plot_percentage_of_successfull_responses(
-        input_results_dump, args.group_by_param, plot_filename, worker=args.worker, title=args.title
+        input_results_dump,
+        args.group_by_param,
+        plot_filename,
+        worker=args.worker,
+        title=args.title,
     )
 
 elif operation == "execution_to_request_ratio":
@@ -125,9 +129,7 @@ elif operation == "distribution":
     )
 
 elif operation == "mse":
-    plot_mse(
-        input_results_dump, args.group_by_param, plot_filename, title=args.title
-    )
+    plot_mse(input_results_dump, args.group_by_param, plot_filename, title=args.title)
 
 elif operation == "cumulative_workers_times":
     plot_cumulative_time_vs_params(
@@ -140,5 +142,10 @@ elif operation == "cumulative_workers_times":
 
 elif operation == "speedup":
     plot_speedup(
-        input_results_dump, args.group_by_param, plot_filename, args.phase, int(args.phase_with_single_worker_duration), title=args.title
+        input_results_dump,
+        args.group_by_param,
+        plot_filename,
+        args.phase,
+        int(args.phase_with_single_worker_duration),
+        title=args.title,
     )

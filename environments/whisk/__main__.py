@@ -1,8 +1,7 @@
 import json
 from environment_common import execute
 import time
-import subprocess
-import os
+
 def main(event):
     try:
         start_time = time.time()
