@@ -60,7 +60,7 @@ def run_convertmc(dir, worker_id_prefix):
         pass
 
     subprocess.run(
-        f"./convertmc hdf --many {dir}/*.bdo {dir}",
+        f"./convertmc hdf --many {dir}/*.bdo {dir} -e none",
         check=False,
         shell=True,
         stdout=subprocess.PIPE,

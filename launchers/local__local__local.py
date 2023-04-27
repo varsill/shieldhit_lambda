@@ -39,9 +39,9 @@ def launch_test(
         )
     )
     # extract and reduce
-    _reducer_results, extract_and_reduce_time = meassure_time(
+    _extract_and_reduce_results, extract_and_reduce_time = meassure_time(
         lambda: subprocess.check_output(
-            f"./binaries/convertmc hdf --many '{TEMPORARY_RESULTS}/*.bdo' {TEMPORARY_RESULTS}",
+            f"./binaries/convertmc hdf --many '{TEMPORARY_RESULTS}/*.bdo' {TEMPORARY_RESULTS}  -e none",
             shell=True,
         )
     )
