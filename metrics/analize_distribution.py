@@ -3,10 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-RESULTS_DUMP_FILE = "emergency.dump"
-PLOT_FILE = "DISTRIBUTION.png"
-GROUP_BY_PARAM = "how_many_mappers"
-
 
 def __load_hdf(file_path):
     f = h5py.File(file_path, "r")
@@ -68,7 +64,26 @@ def plot_mse(results, group_by_param, plot_filename, title):
     )
     plt.xlabel(group_by_param)
     plt.ylabel("MSE in contrast to single worker results")
-    plt.yscale("log")
+    # plt.yscale("log")
+    # plt.ylim([0, 0.0001])
+    plt.title(title)
+    plt.savefig(plot_filename)
+
+
+def plot_psnr(results, group_by_param, plot_filename, title):
+    results_avg = results.groupby(f"params.{group_by_param}").mean().reset_index()
+    results_std = results.groupby(f"params.{group_by_param}").std().fillna(0)
+
+    plt.errorbar(
+        results_avg[f"params.{group_by_param}"],
+        results_avg["metrics.psnr"],
+        results_std["metrics.psnr"],
+        linestyle="None",
+        marker="^",
+    )
+    plt.xlabel(group_by_param)
+    plt.ylabel("PSNR in contrast to single worker results")
+    # plt.yscale("log")
     # plt.ylim([0, 0.0001])
     plt.title(title)
     plt.savefig(plot_filename)

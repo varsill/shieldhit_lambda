@@ -68,15 +68,16 @@ def load_hdf_result_file(file_path):
 
 
 
-def separate_results(input_dir, output_dir):
-    for filename in glob.glob(f"{input_dir}/*"):
+def separate_results(input_dir, output_dir, extension=""):
+    for filename in glob.glob(f"{input_dir}/*{extension}"):
         _directory_path, just_file_name = os.path.split(filename)
         result_name, _, _worker_id = just_file_name.rpartition("_")
         result_subdir = f"{output_dir}/{result_name}"
         os.makedirs(result_subdir, exist_ok=True)
-        if os.path.exists(os.path.join(result_subdir, filename)):
-            os.remove(os.path.join(result_subdir, filename))
+        # if os.path.exists(os.path.join(result_subdir, filename)):
+        #     os.remove(os.path.join(result_subdir, filename))
         shutil.move(filename, result_subdir)
+       
 
 
 def mktemp(dir=""):
@@ -85,7 +86,7 @@ def mktemp(dir=""):
     else:
         return subprocess.check_output(["mktemp", "-d", "-p", dir]).decode()[:-1]
 
-def distribution_metric(results_dir, reference_results_dir=REF_RESULTS):
+def mse(results_dir, reference_results_dir=REF_RESULTS):
     import numpy as np
 
     results_filenames = _get_all_files_matching_the_regex(results_dir, "*.h5")
@@ -94,7 +95,7 @@ def distribution_metric(results_dir, reference_results_dir=REF_RESULTS):
     how_many_results_not_produced = len(ref_results_filenames)-len(common_filenames)
 
     if len(results_filenames)==0:
-        return 1, how_many_results_not_produced
+        return np.NAN
     
     cumulative_mse = 0
     for filename in common_filenames:
@@ -109,8 +110,45 @@ def distribution_metric(results_dir, reference_results_dir=REF_RESULTS):
             mse = np.sum((results - ref_results) ** 2)
             mse_normalized = mse / np.sum(ref_results**2)
             cumulative_mse += mse_normalized
-    return cumulative_mse, how_many_results_not_produced
+    return cumulative_mse
 
+def normalize(x):
+    import numpy as np
+    return (x-np.min(x))/(np.max(x)-np.min(x))
+
+def psnr(results_dir, reference_results_dir=REF_RESULTS):
+    import numpy as np
+    from math import log10
+
+    results_filenames = _get_all_files_matching_the_regex(results_dir, "*.h5")
+    ref_results_filenames = _get_all_files_matching_the_regex(reference_results_dir, "*.h5")
+    common_filenames = list(set(results_filenames) & set(ref_results_filenames))
+    how_many_results_not_produced = len(ref_results_filenames)-len(common_filenames)
+    if len(results_filenames)==0:
+        return np.NAN
+    
+    cumulative_psnr = 0
+    how_many_pages = 0
+    for filename in common_filenames:
+        results = load_hdf_result_file(f"{results_dir}/{filename}")
+        ref_results = load_hdf_result_file(f"{reference_results_dir}/{filename}")
+        if isinstance(results, list):
+            for page, ref_page in zip(results, ref_results):
+                page_norm = normalize(page)
+                ref_page_norm = normalize(ref_page)
+                mse = np.sum((page_norm - ref_page_norm) ** 2)
+                psnr = 20*log10(1) - 10*log10(mse)
+                cumulative_psnr += psnr
+                how_many_pages += 1
+        else:
+            results_norm = normalize(results)
+            ref_results_norm = normalize(ref_results)
+            mse = np.sum((results_norm - ref_results_norm) ** 2)
+            psnr = 20*log10(1) - 10*log10(mse)
+            cumulative_psnr += psnr
+            how_many_pages += 1
+    
+    return cumulative_psnr/how_many_pages
 
 def _get_all_files_matching_the_regex(directory_path, regex_str):
     all_result_filenames = []

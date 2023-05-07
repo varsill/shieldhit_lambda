@@ -8,7 +8,7 @@ import time
 from multiprocessing import Manager, Pool
 from typing import Dict
 
-from common import distribution_metric, separate_results
+from common import mse, psnr, separate_results
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
 from datatypes.in_memory import InMemoryBinary
 from launchers.common import initialize_metrics
@@ -220,9 +220,8 @@ def launch_test(
     in_memory_final_results = FilesystemHDF(FINAL_RESULTS).to_memory()
     if "z_profile.h5" in in_memory_final_results.files_map.keys():
         metrics["hdf_results"] = in_memory_final_results.read("z_profile.h5")
-    metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(
-        FINAL_RESULTS
-    )
+    metrics["mse"] = mse(FINAL_RESULTS)
+    metrics["psnr"] = psnr(FINAL_RESULTS)
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)

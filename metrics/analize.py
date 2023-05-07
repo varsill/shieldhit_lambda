@@ -17,7 +17,7 @@ def load(input_file_path):
 
 parser = argparse.ArgumentParser(description="Analyze .dump files.")
 parser.add_argument("input")
-parser.add_argument("-g", "--group_by_param", default="how_many_mappers")
+parser.add_argument("-g", "--group_by_param", default="how_many_workers")
 parser.add_argument("-o", "--output", default="./")
 parser.add_argument("-l", "--limit", default="0,500")
 parser.add_argument("-t", "--title", default="")
@@ -45,6 +45,8 @@ phases_makespan_parser.add_argument("-p", "--phases", default="total")
 distribution_parser = subparsers.add_parser("distribution")
 
 mse_parser = subparsers.add_parser("mse")
+
+psnr_parser = subparsers.add_parser("psnr")
 
 cumulative_times_parser = subparsers.add_parser("cumulative_workers_times")
 cumulative_times_parser.add_argument("-w", "--worker", default="simulate")
@@ -130,6 +132,9 @@ elif operation == "distribution":
 
 elif operation == "mse":
     plot_mse(input_results_dump, args.group_by_param, plot_filename, title=args.title)
+
+elif operation == "psnr":
+    plot_psnr(input_results_dump, args.group_by_param, plot_filename, title=args.title)
 
 elif operation == "cumulative_workers_times":
     plot_cumulative_time_vs_params(

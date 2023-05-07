@@ -6,7 +6,7 @@ import shutil
 import string
 import subprocess
 
-from common import mktemp
+from common import mktemp, separate_results
 from converters import Converters
 
 BUCKET = "shieldhit-results-bucket"
@@ -59,13 +59,16 @@ def run_convertmc(dir, worker_id_prefix):
     except Exception:
         pass
 
-    subprocess.run(
-        f"./convertmc hdf --many {dir}/*.bdo {dir} -e none",
-        check=False,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    separate_results(dir, dir, ".bdo")
+    for subdir in glob.glob(f"{dir}/*"):
+        if os.path.isdir(subdir):
+            subprocess.run(
+                f"./convertmc hdf --many {subdir}/*.bdo {dir} -e none",
+                check=True,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
 
     all_hdf_files = glob.glob(f"{dir}/*.h5")
     _all_hdf_files_with_changed_name = _rename_hdf_files(
@@ -95,6 +98,7 @@ def load(files, get_from):
 
 def save(dir, files_to_save_extension, save_to):
     all_result_files = glob.glob(f"{dir}/*{files_to_save_extension}")
+
     if save_to == "s3":
         import boto3
 

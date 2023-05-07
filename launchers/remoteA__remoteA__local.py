@@ -4,10 +4,9 @@ import shutil
 import time
 from typing import Dict
 
-from common import distribution_metric
+from common import mse, psnr
 from datatypes.filesystem import FilesystemBinary, FilesystemHDF
-from launchers.common import (initialize_metrics,
-                              prepare_multiple_simulate_functions)
+from launchers.common import initialize_metrics, prepare_multiple_simulate_functions
 from workers.common.remote import RemoteEnvironment
 from workers.common.remote_invocation_api import resolve_remote_function
 from workers.local.reduce import reduce
@@ -63,17 +62,16 @@ def launch_test(
         how_many_samples,
         how_many_workers,
         dat_files,
-        True,
         save_to="download",
     )
     filesystem_simulate_and_extract_results = (
         in_memory_simulate_and_extract_results.to_filesystem(TEMPORARY_RESULTS).to_hdf()
     )
     # reduce
-    reducer_in_memory_results, reduce_time = reduce(
+    reduce_in_memory_results, reduce_time = reduce(
         filesystem_simulate_and_extract_results
     )
-    reducer_in_memory_results.to_filesystem(FINAL_RESULTS)
+    reduce_in_memory_results.to_filesystem(FINAL_RESULTS)
     total_duration = time.time() - start_time
     # update metrics
     metrics["phases"] = ["simulating_and_extracting", "reducing"]
@@ -98,9 +96,8 @@ def launch_test(
     in_memory_final_results = FilesystemHDF(FINAL_RESULTS).to_memory()
     if "z_profile.h5" in in_memory_final_results.files_map.keys():
         metrics["hdf_results"] = in_memory_final_results.read("z_profile.h5")
-    metrics["mse"], metrics["how_many_results_not_delivered"] = distribution_metric(
-        FINAL_RESULTS
-    )
+    metrics["mse"] = mse(FINAL_RESULTS)
+    metrics["psnr"] = psnr(FINAL_RESULTS)
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)
