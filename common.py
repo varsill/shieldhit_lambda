@@ -112,9 +112,12 @@ def mse(results_dir, reference_results_dir=REF_RESULTS):
             cumulative_mse += mse_normalized
     return cumulative_mse
 
-def normalize(x):
+def normalize(x, y):
+    
     import numpy as np
-    return (x-np.min(x))/(np.max(x)-np.min(x))
+    mini = min(np.min(x), np.min(y))
+    maxi = max(np.max(x), np.max(y))
+    return (x-mini)/(maxi-mini), (y-mini)/(maxi-mini)
 
 def psnr(results_dir, reference_results_dir=REF_RESULTS):
     import numpy as np
@@ -134,20 +137,18 @@ def psnr(results_dir, reference_results_dir=REF_RESULTS):
         ref_results = load_hdf_result_file(f"{reference_results_dir}/{filename}")
         if isinstance(results, list):
             for page, ref_page in zip(results, ref_results):
-                page_norm = normalize(page)
-                ref_page_norm = normalize(ref_page)
+                page_norm, ref_page_norm = normalize(page, ref_page)
                 mse = np.sum((page_norm - ref_page_norm) ** 2)
                 psnr = 20*log10(1) - 10*log10(mse)
                 cumulative_psnr += psnr
                 how_many_pages += 1
         else:
-            results_norm = normalize(results)
-            ref_results_norm = normalize(ref_results)
+            results_norm, ref_results_norm = normalize(results, ref_results)
             mse = np.sum((results_norm - ref_results_norm) ** 2)
             psnr = 20*log10(1) - 10*log10(mse)
             cumulative_psnr += psnr
             how_many_pages += 1
-    
+    print(cumulative_psnr)
     return cumulative_psnr/how_many_pages
 
 def _get_all_files_matching_the_regex(directory_path, regex_str):
