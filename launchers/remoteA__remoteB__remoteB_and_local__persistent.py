@@ -219,12 +219,21 @@ def launch_test(
 
     in_memory_final_results = FilesystemHDF(FINAL_RESULTS).to_memory()
     if "z_profile.h5" in in_memory_final_results.files_map.keys():
-        metrics["hdf_results"] = in_memory_final_results.read("z_profile.h5")
+        print("THERE IS NO OUTPUT FILE!")
+        #metrics["hdf_results"] = in_memory_final_results.read("z_profile.h5")
     metrics["mse"] = mse(FINAL_RESULTS)
     metrics["psnr"] = psnr(FINAL_RESULTS)
 
     # cleanup
     shutil.rmtree(TEMPORARY_RESULTS)
     shutil.rmtree(FINAL_RESULTS)
+    clear()
 
     return dict(metrics)
+
+def clear():
+    import requests
+    lambda_url = "https://172.17.0.1:10001/api/v1/web/guest/default/shieldHit"
+    json_input = {"action": "clear", "dir": WHISK_VOLUME}
+    requests.post(lambda_url, json=json_input, verify=False)
+  

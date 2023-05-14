@@ -94,8 +94,9 @@ def launch_test(
     metrics["makespan"]["total"] = total_duration
 
     in_memory_final_results = FilesystemHDF(FINAL_RESULTS).to_memory()
-    if "z_profile.h5" in in_memory_final_results.files_map.keys():
-        metrics["hdf_results"] = in_memory_final_results.read("z_profile.h5")
+    if "z_profile.h5" not in in_memory_final_results.files_map.keys():
+        print("THERE IS NO OUTPUT FILE!")
+        #metrics["hdf_results"] = in_memory_final_results.read("z_profile.h5")
     metrics["mse"] = mse(FINAL_RESULTS)
     metrics["psnr"] = psnr(FINAL_RESULTS)
 

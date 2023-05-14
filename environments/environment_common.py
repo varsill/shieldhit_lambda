@@ -14,6 +14,7 @@ BUCKET = "shieldhit-results-bucket"
 
 def execute(event):
     action = event.get("action", "action not provided")
+    
     if action == "simulate":
         n = event.get("n", 1000)
         N = event.get("N", 0)
@@ -30,6 +31,7 @@ def execute(event):
         loaded = load(files, "uploaded")
         results = run_shieldhit(n, N, loaded)
         results = run_convertmc(results, 0)
+        
         return save(results, ".h5", save_to)
     elif action == "extract_and_reduce":
         files = event["files"]
@@ -38,6 +40,9 @@ def execute(event):
         loaded = load(files, get_from)
         results = run_convertmc(loaded, worker_id_prefix)
         return save(results, ".h5", "download")
+    elif action == "clear":
+        directory = event["dir"]
+        os.rmdir(directory)
     else:
         raise Exception(f"Unknown action: {action}")
 
@@ -60,6 +65,7 @@ def run_convertmc(dir, worker_id_prefix):
         pass
 
     separate_results(dir, dir, ".bdo")
+    
     for subdir in glob.glob(f"{dir}/*"):
         if os.path.isdir(subdir):
             subprocess.run(
@@ -69,6 +75,7 @@ def run_convertmc(dir, worker_id_prefix):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
+            
 
     all_hdf_files = glob.glob(f"{dir}/*.h5")
     _all_hdf_files_with_changed_name = _rename_hdf_files(

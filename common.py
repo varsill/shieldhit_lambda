@@ -86,6 +86,13 @@ def mktemp(dir=""):
     else:
         return subprocess.check_output(["mktemp", "-d", "-p", dir]).decode()[:-1]
 
+
+def normalize(x, y):
+    import numpy as np
+    mini = min(np.min(x), np.min(y))
+    maxi = max(np.max(x), np.max(y))
+    return (x-mini)/(maxi-mini), (y-mini)/(maxi-mini)
+
 def mse(results_dir, reference_results_dir=REF_RESULTS):
     import numpy as np
 
@@ -98,26 +105,23 @@ def mse(results_dir, reference_results_dir=REF_RESULTS):
         return np.NAN
     
     cumulative_mse = 0
+    how_many_pages = 0
     for filename in common_filenames:
         results = load_hdf_result_file(f"{results_dir}/{filename}")
         ref_results = load_hdf_result_file(f"{reference_results_dir}/{filename}")
         if isinstance(results, list):
             for page, ref_page in zip(results, ref_results):
-                mse = np.sum((page - ref_page) ** 2)
-                mse_normalized = mse / np.sum(ref_page**2)
-                cumulative_mse += mse_normalized
+                #page_norm, ref_page_norm = normalize(page, ref_page)
+                mse = ((page - ref_page) ** 2).mean()
+                cumulative_mse += mse
+                how_many_pages += 1
         else:
-            mse = np.sum((results - ref_results) ** 2)
-            mse_normalized = mse / np.sum(ref_results**2)
-            cumulative_mse += mse_normalized
+            #results_norm, ref_results_norm = normalize(results, ref_results)
+            mse = ((results - ref_results) ** 2).mean()
+            cumulative_mse += mse
+            how_many_pages += 1
     return cumulative_mse
 
-def normalize(x, y):
-    
-    import numpy as np
-    mini = min(np.min(x), np.min(y))
-    maxi = max(np.max(x), np.max(y))
-    return (x-mini)/(maxi-mini), (y-mini)/(maxi-mini)
 
 def psnr(results_dir, reference_results_dir=REF_RESULTS):
     import numpy as np
@@ -127,7 +131,7 @@ def psnr(results_dir, reference_results_dir=REF_RESULTS):
     ref_results_filenames = _get_all_files_matching_the_regex(reference_results_dir, "*.h5")
     common_filenames = list(set(results_filenames) & set(ref_results_filenames))
     how_many_results_not_produced = len(ref_results_filenames)-len(common_filenames)
-    if len(results_filenames)==0:
+    if len(common_filenames)==0:
         return np.NAN
     
     cumulative_psnr = 0
@@ -138,17 +142,16 @@ def psnr(results_dir, reference_results_dir=REF_RESULTS):
         if isinstance(results, list):
             for page, ref_page in zip(results, ref_results):
                 page_norm, ref_page_norm = normalize(page, ref_page)
-                mse = np.sum((page_norm - ref_page_norm) ** 2)
+                mse = ((page_norm - ref_page_norm) ** 2).mean()
                 psnr = 20*log10(1) - 10*log10(mse)
                 cumulative_psnr += psnr
                 how_many_pages += 1
         else:
             results_norm, ref_results_norm = normalize(results, ref_results)
-            mse = np.sum((results_norm - ref_results_norm) ** 2)
+            mse = ((results_norm - ref_results_norm) ** 2).mean()
             psnr = 20*log10(1) - 10*log10(mse)
             cumulative_psnr += psnr
             how_many_pages += 1
-    print(cumulative_psnr)
     return cumulative_psnr/how_many_pages
 
 def _get_all_files_matching_the_regex(directory_path, regex_str):

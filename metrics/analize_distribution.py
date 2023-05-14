@@ -54,33 +54,35 @@ def plot_distribution(results_dump, group_by_param, plot_filename, title):
 def plot_mse(results, group_by_param, plot_filename, title):
     results_avg = results.groupby(f"params.{group_by_param}").mean().reset_index()
     results_std = results.groupby(f"params.{group_by_param}").std().fillna(0)
-
     plt.errorbar(
         results_avg[f"params.{group_by_param}"],
-        results_avg["metrics.mse"],
-        results_std["metrics.mse"],
+        results_avg["metrics.mse"]/1750,
+        results_std["metrics.mse"]/1750,
         linestyle="None",
-        marker="^",
+        marker=".",
+        label="Meassured values"
     )
+    plt.plot(results_avg[f"params.{group_by_param}"], np.sqrt(10)/np.sqrt(results_avg[f"params.{group_by_param}"]), '--', label=r"$y=\frac{1}{\sqrt{x}}$")
     plt.xlabel(group_by_param)
     plt.ylabel("MSE in contrast to single worker results")
-    # plt.yscale("log")
+    #plt.yscale("log")
     # plt.ylim([0, 0.0001])
     plt.title(title)
+    plt.legend()
     plt.savefig(plot_filename)
 
 
 def plot_psnr(results, group_by_param, plot_filename, title):
     results_avg = results.groupby(f"params.{group_by_param}").mean().reset_index()
     results_std = results.groupby(f"params.{group_by_param}").std().fillna(0)
-
     plt.errorbar(
         results_avg[f"params.{group_by_param}"],
         results_avg["metrics.psnr"],
         results_std["metrics.psnr"],
         linestyle="None",
-        marker="^",
+        marker=".",
     )
+    #plt.plot(results_avg[f"params.{group_by_param}"], -np.sqrt(results_avg[f"params.{group_by_param}"]))
     plt.xlabel(group_by_param)
     plt.ylabel("PSNR in contrast to single worker results")
     # plt.yscale("log")

@@ -49,7 +49,7 @@ def launch_test(
     total_duration = time.time() - start_time
 
     # update metrics
-    metrics["phases"] = ["simulating", "extracting_reducing"]
+    metrics["phases"] = ["simulating", "extracting_and_reducing"]
 
     metrics["number_of_workers"]["simulate"] = how_many_workers
     metrics["number_of_workers"]["extract_and_reduce"] = 1
@@ -65,10 +65,10 @@ def launch_test(
     metrics["makespan"]["total"] = total_duration
 
     in_memory_final_results = FilesystemHDF(FINAL_RESULTS).to_memory()
-    if "z_profile_.h5" in in_memory_final_results.files_map.keys():
-        metrics["hdf_results"] = in_memory_final_results.read("z_profile_.h5")
+    if "z_profile_.h5" not in in_memory_final_results.files_map.keys():
+        print("THERE IS NO OUTPUT FILE!")
+    #    metrics["hdf_results"] = in_memory_final_results.read("z_profile_.h5")
     metrics["mse"] = mse(FINAL_RESULTS)
-
     metrics["psnr"] = psnr(FINAL_RESULTS)
 
     # cleanup

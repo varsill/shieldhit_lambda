@@ -98,7 +98,8 @@ def launch_test(
 
     in_memory_final_results = FilesystemHDF(FINAL_RESULTS).to_memory()
     if "z_profile_.h5" in in_memory_final_results.files_map.keys():
-        metrics["hdf_results"] = in_memory_final_results.read("z_profile_.h5")
+        print("THERE IS NO OUTPUT FILE!")
+        #metrics["hdf_results"] = in_memory_final_results.read("z_profile_.h5")
     metrics["mse"] = mse(FINAL_RESULTS)
     metrics["psnr"] = psnr(FINAL_RESULTS)
     # cleanup

@@ -55,7 +55,6 @@ def launch_test(
         how_many_samples,
         how_many_workers,
         dat_files,
-        False,
         save_to="download",
     )
     binary_filesystem_simulate_results = in_memory_simulate_results.to_filesystem(
@@ -85,8 +84,9 @@ def launch_test(
     metrics["makespan"]["total"] = total_duration
 
     in_memory_final_results = FilesystemHDF(FINAL_RESULTS).to_memory()
-    if "z_profile_.h5" in in_memory_final_results.files_map.keys():
-        metrics["hdf_results"] = in_memory_final_results.read("z_profile_.h5")
+    if "z_profile_.h5" not in in_memory_final_results.files_map.keys():
+        print("THERE IS NO OUTPUT FILE!")
+        #metrics["hdf_results"] = in_memory_final_results.read("z_profile_.h5")
     metrics["mse"] = mse(FINAL_RESULTS)
     metrics["psnr"] = psnr(FINAL_RESULTS)
 

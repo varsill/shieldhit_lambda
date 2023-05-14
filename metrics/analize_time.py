@@ -21,7 +21,7 @@ def plot_request_times_histogram(
     results_avg = (
         results.groupby(f"params.{group_by_param}").agg(agregator).reset_index()
     )
-
+    
     all_times = results_avg[f"metrics.{metric}"].tolist()[0]
     plt.hist(all_times)
     plt.xlabel("Request time [s]")
@@ -87,6 +87,8 @@ def plot_percentage_of_successfull_responses(
         results_avg[f"params.{group_by_param}"],
         results_avg["successfull_responses_perc"],
         label="Successfull mapper responses percentage",
+        marker=".",
+        linestyle="None",
     )
     plt.legend()
     plt.xlabel(f"{group_by_param}")
@@ -112,6 +114,8 @@ def plot_phases_makespan_vs_params(
             results_avg[f"metrics.makespan.{phase}"],
             results_std[f"metrics.makespan.{phase}"],
             label=f"{phase} time",
+            marker=".",
+            linestyle="None",
         )
 
     plt.legend()
@@ -151,7 +155,9 @@ def plot_execution_time_and_request_time_ratio_vs_param(
         .reset_index()
     )
     plt.errorbar(
-        results_avg[f"params.{group_by_param}"], results_avg["execution_to_request"]
+        results_avg[f"params.{group_by_param}"], results_avg["execution_to_request"],
+        marker=".",
+        linestyle="None"
     )
     plt.legend()
     plt.xlabel(f"{group_by_param}")
@@ -183,6 +189,8 @@ def plot_cumulative_time_vs_params(
         results_avg[f"execution_time_sum"],
         results_std[f"execution_time_sum"],
         label=f"{worker} executions cumulative time",
+        marker=".",
+        linestyle="None",
     )
 
     plt.errorbar(
@@ -190,12 +198,24 @@ def plot_cumulative_time_vs_params(
         results_avg[f"execution_time_sum"],
         results_std[f"execution_time_sum"],
         label=f"{worker} requests cumulative time",
+        marker=".",
+        linestyle="None",
     )
-
+    
     plt.legend()
     plt.xlabel(f"{group_by_param}")
     plt.ylabel("Time [s]")
     plt.title(title)
+
+
+    # xlab = plt.xaxis.get_label()
+    # ylab = plt.yaxis.get_label()
+
+    # xlab.set_style('italic')
+    # xlab.set_size(10)
+    # ylab.set_style('italic')
+    # ylab.set_size(10)
+
     plt.savefig(plot_filename)
 
 
@@ -206,6 +226,9 @@ def plot_speedup(
     phase,
     phase_with_single_worker_duration,
     title,
+    non_paralelizable_phase_duration=1,
+    color='g',
+    label=''
 ):
     input_results_dump["speedup"] = input_results_dump.apply(
         lambda row: phase_with_single_worker_duration
@@ -217,21 +240,27 @@ def plot_speedup(
         .mean(["speedup"])
         .reset_index()
     )
+    k = (phase_with_single_worker_duration-non_paralelizable_phase_duration)/phase_with_single_worker_duration
     x = results_avg[f"params.{group_by_param}"]
     plt.errorbar(
         x,
         results_avg[f"speedup"],
-        label=f"Speedup",
+        label=f"{label} - Speedup",
+        marker=".",
+        linestyle="None",
+        c=color
     )
 
     plt.errorbar(
         x,
-        x,
-        label=f"Ref",
+        1/(1-k+k/x),
+        label=f"{label} - Maximum speedup according to Amdahl's law",
+        linestyle="--",
+        c=color
     )
 
     plt.legend()
     plt.xlabel(f"{group_by_param}")
     plt.ylabel(f"Speedup of phase: {phase}")
     plt.title(title)
-    plt.savefig(plot_filename)
+    
