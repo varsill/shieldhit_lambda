@@ -1,10 +1,10 @@
-LAUNCH_NAME = "remoteA__remoteB__remoteB_and_local__persistent"
-METRICS_RESULT_BASE_PATH = "/home/ubuntu/shieldhit_lambda/metrics_results"
 FAAS_ENVIRONMENT = "aws"
-TEST_RUNNER_POSTFIX= ""
-HOW_MANY_TRIES = 3
 WORKERS_RANGE = [60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400, 420, 440, 460, 480, 500]
 
+LAUNCH_NAME = "remoteA__remoteB__remoteB_and_local__persistent"
+METRICS_RESULT_BASE_PATH = "/home/ubuntu/shieldhit_lambda/metrics_results"
+TEST_RUNNER_POSTFIX= ""
+HOW_MANY_TRIES = 3
 TEST_CASES = {"how_many_workers": WORKERS_RANGE, "how_many_samples": 1000000, "reduce_when": [2, 3, 5], "faas_environment": FAAS_ENVIRONMENT}
 
 import importlib

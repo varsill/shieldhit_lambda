@@ -6,7 +6,7 @@ import os
 import glob
 import shutil
 
-REF_RESULTS="/home/ubuntu/shieldhit_lambda/ref_results"
+REF_RESULTS="./ref_results"
 
 T = TypeVar("T")
 
