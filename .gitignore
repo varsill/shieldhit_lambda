@@ -13,3 +13,4 @@ binaries/
 *.png
 *.log
 *.h5
+.ipynb_checkpoints/

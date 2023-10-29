@@ -87,37 +87,29 @@ if __name__ == "__main__":
         plot_request_times_histogram(
             input_results_dump,
             args.group_by_param,
-            plot_filename,
             metric=args.metric,
             group_by_param_value=int(args.group_by_param_value),
-            title=args.title,
         )
 
     elif operation == "execution_and_request":
         plot_execution_time_to_request_time_vs_param(
             input_results_dump,
             args.group_by_param,
-            plot_filename,
-            worker=args.worker,
-            title=args.title,
+            worker=args.worker
         )
 
     elif operation == "success_ratio":
         plot_percentage_of_successfull_responses(
             input_results_dump,
             args.group_by_param,
-            plot_filename,
-            worker=args.worker,
-            title=args.title,
+            worker=args.worker
         )
 
     elif operation == "execution_to_request_ratio":
         plot_execution_time_and_request_time_ratio_vs_param(
             input_results_dump,
             args.group_by_param,
-            plot_filename,
-            worker=args.worker,
-            title=args.title,
+            worker=args.worker
         )
 
     elif operation == "phases_makespan":
@@ -125,38 +117,34 @@ if __name__ == "__main__":
         plot_phases_makespan_vs_params(
             input_results_dump,
             args.group_by_param,
-            plot_filename,
             phases_list,
-            title=args.title,
         )
 
     elif operation == "distribution":
         plot_distribution(
-            input_results_dump, args.group_by_param, plot_filename, title=args.title
+            input_results_dump, args.group_by_param
         )
 
     elif operation == "mse":
-        plot_mse(input_results_dump, args.group_by_param, plot_filename, title=args.title)
+        plot_mse(input_results_dump, args.group_by_param)
 
     elif operation == "psnr":
-        plot_psnr(input_results_dump, args.group_by_param, plot_filename, title=args.title)
+        plot_psnr(input_results_dump, args.group_by_param)
 
     elif operation == "cumulative_workers_times":
         plot_cumulative_time_vs_params(
             input_results_dump,
             args.group_by_param,
-            plot_filename,
             worker=args.worker,
-            title=args.title,
         )
 
     elif operation == "speedup":
         plot_speedup(
             input_results_dump,
             args.group_by_param,
-            plot_filename,
             args.phase,
             int(args.phase_with_single_worker_duration),
             title=args.title,
         )
-        plt.savefig(plot_filename)
+    plt.title(args.title)
+    plt.savefig(plot_filename)
